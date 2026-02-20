@@ -1,0 +1,8 @@
+rules:
+  default_timezone: America/Toronto
+  quiet_hours_local: [22, 7]
+  per_platform_daily_max:
+    x: 4
+    facebook: 3
+  min_minutes_between_posts: 90
+  require_manual_approval: true

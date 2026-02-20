@@ -1,0 +1,13 @@
+[Unit]
+Description=Pulse Worker
+After=network.target pulse-api.service
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/Pulse/apps/worker
+ExecStart=/usr/bin/env uv run python -m worker.main
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

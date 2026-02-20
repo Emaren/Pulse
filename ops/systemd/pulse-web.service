@@ -1,0 +1,14 @@
+[Unit]
+Description=Pulse Frontend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/Pulse/apps/web
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env pnpm start --port 3090
+Restart=always
+User=www-data
+
+[Install]
+WantedBy=multi-user.target

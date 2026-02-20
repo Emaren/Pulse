@@ -1,0 +1,31 @@
+projects:
+  - slug: tokentap
+    name: TokenTap
+    url: https://tokentap.ca
+    tone: energetic
+    tags: ["loyalty", "local-business", "retention"]
+  - slug: wallygotchi
+    name: Wallygotchi
+    url: https://tokentap.ca/wallygotchi
+    tone: playful
+    tags: ["gamification", "wallet", "engagement"]
+  - slug: wheatandstone
+    name: WheatAndStone
+    url: https://wheatandstone.ca
+    tone: community
+    tags: ["community", "contributor", "brand"]
+  - slug: vps-sentry
+    name: VPS-Sentry
+    url: https://vps-sentry.ca
+    tone: practical
+    tags: ["devops", "uptime", "security"]
+  - slug: redline-legal
+    name: Redline Legal
+    url: https://redlinelegal.ca
+    tone: professional
+    tags: ["legal", "workflow", "productivity"]
+  - slug: tmail
+    name: TMail
+    url: https://tmail.tokentap.ca
+    tone: direct
+    tags: ["email", "tracking", "outreach"]

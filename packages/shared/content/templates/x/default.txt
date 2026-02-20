@@ -1,0 +1,5 @@
+Working on {project_name}: {update}
+
+Learn more: {url}
+
+#{tag1} #{tag2}

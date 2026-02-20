@@ -1,0 +1,4 @@
+Update from {project_name}:
+{update}
+
+Details: {url}
