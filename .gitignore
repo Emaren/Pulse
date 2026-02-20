@@ -57,3 +57,7 @@ pnpm-debug.log*
 **/node_modules/
 **/.next/
 .env
+
+# allow committing shared VS Code settings even if .vscode is globally ignored
+!.vscode/
+!.vscode/settings.json
