@@ -1,0 +1,10 @@
+{
+  "git.untrackedChanges": "hidden",
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.cache/**": true,
+    "**/.home/**": true
+  }
+}
