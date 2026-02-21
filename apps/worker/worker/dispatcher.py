@@ -51,13 +51,21 @@ def process_due_jobs(session: Session, batch_size: int, max_attempts: int) -> in
 
         try:
             payload = json.loads(row.payload_json or "{}")
+
             account = session.scalar(
                 select(PlatformAccount)
                 .where(PlatformAccount.platform == row.platform)
-                .order_by(PlatformAccount.id.asc())
+                .order_by(PlatformAccount.connected_at.desc(), PlatformAccount.id.desc())
             )
             if account is None:
                 raise RuntimeError(f"No connected account for platform '{row.platform}'")
+
+            if row.platform == "facebook":
+                try:
+                    details = json.loads(account.details_json or "{}")
+                except Exception:  # noqa: BLE001
+                    details = {}
+                payload.setdefault("page_id", details.get("page_id"))
 
             connector = _connector_for(row.platform)
             external_post_id = connector(account.encrypted_access_token, payload)
@@ -76,10 +84,22 @@ def process_due_jobs(session: Session, batch_size: int, max_attempts: int) -> in
             if next_attempt < max_attempts:
                 row.status = "retrying"
                 row.scheduled_at = datetime.now(timezone.utc) + timedelta(seconds=retry_delay_seconds(next_attempt))
-                _record_event(session, "retrying", row.id, "Dispatch failed; retry scheduled", {"error": str(exc), "attempt": next_attempt})
+                _record_event(
+                    session,
+                    "retrying",
+                    row.id,
+                    "Dispatch failed; retry scheduled",
+                    {"error": str(exc), "attempt": next_attempt},
+                )
             else:
                 row.status = "failed"
-                _record_event(session, "failed", row.id, "Dispatch failed permanently", {"error": str(exc), "attempt": next_attempt})
+                _record_event(
+                    session,
+                    "failed",
+                    row.id,
+                    "Dispatch failed permanently",
+                    {"error": str(exc), "attempt": next_attempt},
+                )
 
         session.commit()
 

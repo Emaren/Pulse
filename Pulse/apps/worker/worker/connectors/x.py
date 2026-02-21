@@ -14,23 +14,19 @@ def _snip(s: str, n: int = 500) -> str:
     return s if len(s) <= n else s[:n] + "…"
 
 
-def _fernet() -> Fernet | None:
-    key = (settings.token_encryption_key or "").strip()
-    if not key:
-        return None
-    try:
-        return Fernet(key.encode("utf-8"))
-    except (ValueError, TypeError):
-        return None
-
-
 def _decrypt_token(ciphertext: str) -> str:
     if not ciphertext:
         return ""
 
-    f = _fernet()
-    if f is None:
+    key = (settings.token_encryption_key or "").strip()
+    if not key:
+        # API fallback when TOKEN_ENCRYPTION_KEY is empty
         return base64.urlsafe_b64decode(ciphertext.encode("utf-8")).decode("utf-8")
+
+    try:
+        f = Fernet(key.encode("utf-8"))
+    except (ValueError, TypeError):
+        return ""
 
     try:
         return f.decrypt(ciphertext.encode("utf-8")).decode("utf-8")

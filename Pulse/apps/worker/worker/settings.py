@@ -7,24 +7,15 @@ class WorkerSettings(BaseSettings):
     worker_batch_size: int = 20
     worker_max_attempts: int = 3
 
+    # Must match API if you set it there.
     token_encryption_key: str = ""
-
-    # HTTP
-    http_timeout_seconds: float = 20.0
 
     # X API
     x_api_base: str = "https://api.x.com"
     x_dry_run: bool = False
+    http_timeout_seconds: float = 20.0
 
-    # Facebook Graph API
-    facebook_api_base: str = "https://graph.facebook.com/v25.0"
-    facebook_dry_run: bool = False
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 
 settings = WorkerSettings()
