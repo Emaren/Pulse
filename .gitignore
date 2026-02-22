@@ -63,3 +63,6 @@ pnpm-debug.log*
 !.vscode/settings.json
 
 apps/web/.pnpm-store/
+
+# local sqlite backups
+apps/api/pulse.db.bak.*
