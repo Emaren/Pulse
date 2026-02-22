@@ -6,15 +6,23 @@ from ..models import Project
 
 
 def build_post_payloads(project: Project | None, updates: list[str], platforms: list[str]) -> list[dict[str, Any]]:
-    project_name = project.name if project else "Pulse"
-    project_url = project.website_url if project else ""
+    """
+    Build per-platform payloads.
+
+    Rules:
+    - NEVER auto-prepend "Pulse:" (or any project name prefix).
+    - If a project has a website_url, append it (but don't duplicate if already included).
+    """
+    project_url = (project.website_url or "").strip() if project else ""
 
     payloads: list[dict[str, Any]] = []
     for platform in platforms:
         for update in updates:
-            text = f"{project_name}: {update}".strip()
-            if project_url:
-                text = f"{text}\n\n{project_url}"
+            text = (update or "").strip()
+
+            # Append project URL if present and not already included
+            if project_url and project_url not in text:
+                text = f"{text}\n\n{project_url}".strip()
 
             payloads.append(
                 {
