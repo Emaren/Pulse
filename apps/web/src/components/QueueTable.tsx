@@ -3,7 +3,7 @@ export type QueueItem = {
   platform?: string;
   status?: string;
 
-  // tolerate both snake_case and camelCase from stubs
+  // tolerate both snake_case and camelCase
   scheduled_at?: string | null;
   scheduledAt?: string | null;
 
@@ -11,6 +11,10 @@ export type QueueItem = {
   createdAt?: string | null;
 
   projectKey?: string | null;
+
+  // API returns payload_json -> payload (object) with text inside
+  payload?: any;
+
   text?: string | null;
   error?: string | null;
 };
@@ -20,13 +24,11 @@ type QueueTableProps = {
 };
 
 function pickTime(item: QueueItem): string {
-  return (
-    item.scheduledAt ??
-    item.scheduled_at ??
-    item.createdAt ??
-    item.created_at ??
-    ""
-  );
+  return item.scheduledAt ?? item.scheduled_at ?? item.createdAt ?? item.created_at ?? "";
+}
+
+function pickText(item: QueueItem): string {
+  return item.text ?? item.payload?.text ?? "";
 }
 
 export function QueueTable({ items }: QueueTableProps) {
@@ -38,10 +40,18 @@ export function QueueTable({ items }: QueueTableProps) {
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>When</th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>Platform</th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>Status</th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>Text</th>
+          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+            When
+          </th>
+          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+            Platform
+          </th>
+          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+            Status
+          </th>
+          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+            Text
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -49,7 +59,7 @@ export function QueueTable({ items }: QueueTableProps) {
           const when = pickTime(item);
           const platform = item.platform ?? "";
           const status = item.status ?? "";
-          const text = item.text ?? "";
+          const text = pickText(item);
           const key = String(item.id ?? idx);
 
           return (

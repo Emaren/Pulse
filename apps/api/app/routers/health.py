@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
@@ -5,6 +7,6 @@ from fastapi import APIRouter
 router = APIRouter(tags=["health"])
 
 
-@router.api_route("/health", methods=["GET", "HEAD"])
-def health() -> dict:
+@router.get("/health")
+def health() -> dict[str, str]:
     return {"status": "ok", "time": datetime.now(timezone.utc).isoformat()}

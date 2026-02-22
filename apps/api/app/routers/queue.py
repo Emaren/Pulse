@@ -18,7 +18,13 @@ from ..services.scheduler import compute_scheduled_at
 router = APIRouter(prefix="/queue", tags=["queue"])
 
 
-def _record_event(db: Session, event_type: str, entity_id: str | None, message: str, data: dict[str, Any] | None = None) -> None:
+def _record_event(
+    db: Session,
+    event_type: str,
+    entity_id: str | None,
+    message: str,
+    data: dict[str, Any] | None = None,
+) -> None:
     db.add(
         AuditEvent(
             event_type=event_type,
@@ -45,6 +51,15 @@ def _to_out(item: PostQueue) -> QueueOut:
     )
 
 
+def _normalize_dt(dt: datetime | None) -> datetime | None:
+    """Ensure scheduled_at is timezone-aware UTC (FastAPI may give naive)."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 @router.get("", response_model=list[QueueOut])
 def list_queue(limit: int = 100, db: Session = Depends(get_db)) -> list[QueueOut]:
     rows = db.scalars(select(PostQueue).order_by(PostQueue.scheduled_at.asc()).limit(limit)).all()
@@ -64,6 +79,8 @@ def schedule_posts(payload: QueueScheduleIn, db: Session = Depends(get_db)) -> l
 
     drafts = build_post_payloads(project=project, updates=payload.updates, platforms=payload.platforms)
 
+    base_time = _normalize_dt(payload.scheduled_at)
+
     created: list[PostQueue] = []
     for index, draft in enumerate(drafts):
         try:
@@ -71,7 +88,19 @@ def schedule_posts(payload: QueueScheduleIn, db: Session = Depends(get_db)) -> l
         except ModerationError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-        scheduled_at = compute_scheduled_at(index=index, base_time=payload.scheduled_at, default_delay_minutes=5, jitter_minutes=20)
+        # Explicit scheduling semantics:
+        # - exact: honor scheduled_at as-is (or default to now)
+        # - next_slot: apply compute_scheduled_at() (cadence/jitter)
+        if payload.mode == "exact":
+            scheduled_at = base_time or datetime.now(timezone.utc)
+        else:
+            scheduled_at = compute_scheduled_at(
+                index=index,
+                base_time=base_time,
+                default_delay_minutes=5,
+                jitter_minutes=20,
+            )
+
         row = PostQueue(
             project_id=project.id if project else None,
             platform=draft["platform"],
@@ -85,7 +114,13 @@ def schedule_posts(payload: QueueScheduleIn, db: Session = Depends(get_db)) -> l
 
     db.flush()
     for row in created:
-        _record_event(db, "queued", str(row.id), f"Queued post for {row.platform}")
+        _record_event(
+            db,
+            "queued",
+            str(row.id),
+            f"Queued post for {row.platform}",
+            {"mode": payload.mode},
+        )
 
     db.commit()
 

@@ -1,3 +1,4 @@
+import { QueueCompose } from "@/components/QueueCompose";
 import { QueueTable, type QueueItem } from "@/components/QueueTable";
 import { getQueue } from "@/lib/api";
 
@@ -11,8 +12,9 @@ export default async function QueuePage() {
   }
 
   return (
-    <section>
+    <section className="grid" style={{ gap: 16 }}>
       <h2>Queue</h2>
+      <QueueCompose />
       <QueueTable items={items} />
     </section>
   );

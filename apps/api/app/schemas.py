@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -47,6 +47,11 @@ class QueueScheduleIn(BaseModel):
     updates: list[str] = Field(default_factory=list)
     platforms: list[str] = Field(default_factory=lambda: ["x", "facebook"])
     scheduled_at: datetime | None = None
+
+    # explicit scheduling semantics:
+    # - exact: honor scheduled_at as-is (no cadence/jitter modification)
+    # - next_slot: apply your cadence/rounding logic server-side
+    mode: Literal["exact", "next_slot"] = "next_slot"
 
 
 class QueueOut(BaseModel):

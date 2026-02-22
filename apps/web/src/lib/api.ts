@@ -1,4 +1,5 @@
-const API_BASE =
+const UPSTREAM_API_BASE =
+  process.env.PULSE_API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   process.env.NEXT_PUBLIC_API_BASE ?? // allow older var name too
   "http://localhost:3390";
@@ -8,6 +9,8 @@ export type QueueItem = {
   platform: "x" | "facebook";
   status: string;
   scheduled_at: string;
+  payload?: any;
+  last_error?: string | null;
 };
 
 export type Health = {
@@ -15,11 +18,30 @@ export type Health = {
   time: string;
 };
 
+function resolveUrl(path: string): string {
+  // Server-side (RSC): call FastAPI directly
+  if (typeof window === "undefined") return `${UPSTREAM_API_BASE}${path}`;
+
+  // Browser: call Next proxy routes (same-origin)
+  // /health -> /api/health
+  // /queue  -> /api/queue
+  return path.startsWith("/api/") ? path : `/api${path}`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${path}`, {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const headers: Record<string, string> = {};
+
+  // Only set Content-Type when we're actually sending a body.
+  // (Setting it on GET triggers preflight if you ever hit cross-origin.)
+  if (init?.body != null && method !== "GET" && method !== "HEAD") {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(resolveUrl(path), {
     ...init,
     headers: {
-      "Content-Type": "application/json",
+      ...headers,
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
