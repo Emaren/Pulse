@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const links = [
   ["Dashboard", "/"],
@@ -11,14 +16,23 @@ const links = [
 ] as const;
 
 export function Nav() {
+  const pathname = usePathname();
+
   return (
-    <nav className="panel" style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+    <nav className="panel nav-shell">
+      <div className="nav-row">
+        <div className="nav-links">
         {links.map(([label, href]) => (
-          <Link key={href} href={href} style={{ padding: "8px 10px", borderRadius: 8, border: "1px solid #d9d2c5" }}>
+          <Link
+            key={href}
+            href={href}
+            className={`nav-link ${pathname === href || (href !== "/" && pathname.startsWith(href)) ? "is-active" : ""}`}
+          >
             {label}
           </Link>
         ))}
+        </div>
+        <ThemeSwitcher />
       </div>
     </nav>
   );

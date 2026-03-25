@@ -81,6 +81,10 @@ class DraftQueueIn(BaseModel):
     mode: Literal["exact", "next_slot"] = "exact"
 
 
+class DraftStatusUpdateIn(BaseModel):
+    status: Literal["draft", "needs_attention", "rejected", "archived"]
+
+
 class DraftOut(BaseModel):
     id: int
     project_id: int

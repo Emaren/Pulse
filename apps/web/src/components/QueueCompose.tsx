@@ -163,7 +163,8 @@ export function QueueCompose() {
             border: "1px solid var(--line)",
             borderRadius: 10,
             resize: "vertical",
-            background: "white",
+            background: "var(--surface)",
+            color: "var(--ink)",
           }}
           disabled={disabled}
         />
@@ -226,7 +227,8 @@ const inputStyle: CSSProperties = {
   padding: "8px 10px",
   border: "1px solid var(--line)",
   borderRadius: 8,
-  background: "white",
+  background: "var(--surface)",
+  color: "var(--ink)",
 };
 
 function btnStyle(enabled: boolean): CSSProperties {
@@ -234,9 +236,10 @@ function btnStyle(enabled: boolean): CSSProperties {
     padding: "8px 10px",
     borderRadius: 10,
     border: "1px solid var(--line)",
-    background: "white",
+    background: "var(--surface)",
     opacity: enabled ? 1 : 0.55,
     cursor: enabled ? "pointer" : "not-allowed",
+    color: "var(--ink)",
   };
 }
 
@@ -245,9 +248,10 @@ function primaryBtnStyle(enabled: boolean): CSSProperties {
     padding: "8px 10px",
     borderRadius: 10,
     border: "1px solid var(--line)",
-    background: "var(--paper)",
+    background: "var(--accent-soft)",
     fontWeight: 600,
     opacity: enabled ? 1 : 0.55,
     cursor: enabled ? "pointer" : "not-allowed",
+    color: "var(--ink)",
   };
 }

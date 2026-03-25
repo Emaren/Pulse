@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from ..deps import get_db
 from ..models import AuditEvent, Destination, PostDraft, PostQueue, Project
-from ..schemas import DraftIn, DraftOut, DraftQueueIn
+from ..schemas import DraftIn, DraftOut, DraftQueueIn, DraftStatusUpdateIn
 from ..services.moderation import ModerationError, ensure_post_allowed
 from ..services.scheduler import compute_scheduled_at
 from ..settings import settings
@@ -147,6 +147,39 @@ def approve_draft(draft_id: int, db: Session = Depends(get_db)) -> DraftOut:
     draft.approved_at = datetime.now(timezone.utc)
 
     _record_event(db, "draft_approved", "post_draft", str(draft.id), "Draft approved")
+    db.commit()
+    db.refresh(draft)
+    return _to_out(draft)
+
+
+@router.post("/{draft_id}/status", response_model=DraftOut)
+def update_draft_status(draft_id: int, payload: DraftStatusUpdateIn, db: Session = Depends(get_db)) -> DraftOut:
+    draft = db.get(PostDraft, draft_id)
+    if draft is None:
+        raise HTTPException(status_code=404, detail="Draft not found")
+
+    if draft.status in {"queued", "published"} and draft.status != payload.status:
+        raise HTTPException(status_code=400, detail=f"Cannot move a {draft.status} draft into a manual review lane")
+
+    if draft.status == payload.status:
+        return _to_out(draft)
+
+    previous_status = draft.status
+    draft.status = payload.status
+    if payload.status == "draft":
+        draft.approved_at = None
+        draft.queued_at = None
+        draft.scheduled_for = None
+        draft.published_queue_id = None
+
+    _record_event(
+        db,
+        "draft_status_updated",
+        "post_draft",
+        str(draft.id),
+        f"Draft moved from {previous_status} to {payload.status}",
+        {"from": previous_status, "to": payload.status},
+    )
     db.commit()
     db.refresh(draft)
     return _to_out(draft)

@@ -4,7 +4,7 @@
 
 This is a relative "distance from ideal" score for tracking progress without pretending the repo is further along than it is.
 
-- Overall builder score: `0.43 / 1.00`
+- Overall builder score: `0.51 / 1.00`
 - Semantic package versions: still `0.1.0`
 - Interpretation: the skeleton is good, but the premium control-tower product is still early
 
@@ -12,11 +12,11 @@ This is a relative "distance from ideal" score for tracking progress without pre
 
 | Module | Current | Target | Plain-English read |
 | --- | --- | --- | --- |
-| Control tower UI | 0.45 | 0.90 | The dashboard now exposes builder state, but it is still early compared with the premium target |
-| Destination/page control | 0.40 | 0.90 | Pulse now has durable destination objects, but not yet the richer policy model |
-| Draft library + approval | 0.45 | 0.95 | Draft persistence and approval have started, but the inbox experience is still basic |
-| Scheduling/cadence engine | 0.50 | 0.90 | Queue scheduling works, but it is not yet fully window/scoring/cooldown driven |
-| Worker dispatch | 0.62 | 0.85 | The worker remains one of the stronger pieces and now reports draft publication state |
+| Control tower UI | 0.62 | 0.90 | The shell now has real themes, a stronger dashboard, and a much more operational Studio surface |
+| Destination/page control | 0.43 | 0.90 | Pulse has durable destination objects and a clearer voice map, but the policy model is still early |
+| Draft library + approval | 0.60 | 0.95 | The inbox now has real review lanes beyond approve/queue, which makes the draft system materially more useful |
+| Scheduling/cadence engine | 0.52 | 0.90 | Queue scheduling works, but true window scoring, cooldowns, and cadence selection are still ahead |
+| Worker dispatch | 0.63 | 0.85 | The worker remains one of the stronger pieces and now reports draft publication state |
 | Ops + deploy ergonomics | 0.55 | 0.85 | Deploy automation is now real, but still needs stronger runtime checks and rollback confidence |
 | Security posture | 0.35 | 0.85 | Token handling and environment discipline still need tightening |
 

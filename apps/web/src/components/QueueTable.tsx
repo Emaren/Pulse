@@ -33,23 +33,24 @@ function pickText(item: QueueItem): string {
 
 export function QueueTable({ items }: QueueTableProps) {
   if (!items || items.length === 0) {
-    return <p style={{ margin: 0, opacity: 0.7 }}>No queued items.</p>;
+    return <p className="muted" style={{ margin: 0 }}>No queued items.</p>;
   }
 
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+    <div className="table-wrap">
+      <table className="table">
       <thead>
         <tr>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+          <th align="left">
             When
           </th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+          <th align="left">
             Platform
           </th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+          <th align="left">
             Status
           </th>
-          <th align="left" style={{ padding: "8px 6px", borderBottom: "1px solid #ddd" }}>
+          <th align="left">
             Text
           </th>
         </tr>
@@ -64,22 +65,23 @@ export function QueueTable({ items }: QueueTableProps) {
 
           return (
             <tr key={key}>
-              <td style={{ padding: "8px 6px", borderBottom: "1px solid #eee", whiteSpace: "nowrap" }}>
+              <td style={{ whiteSpace: "nowrap" }}>
                 {when || "—"}
               </td>
-              <td style={{ padding: "8px 6px", borderBottom: "1px solid #eee" }}>
+              <td>
                 {platform || "—"}
               </td>
-              <td style={{ padding: "8px 6px", borderBottom: "1px solid #eee" }}>
+              <td>
                 {status || "—"}
               </td>
-              <td style={{ padding: "8px 6px", borderBottom: "1px solid #eee" }}>
+              <td>
                 {text || "—"}
               </td>
             </tr>
           );
         })}
       </tbody>
-    </table>
+      </table>
+    </div>
   );
 }

@@ -1,31 +1,31 @@
 export const builderStatus = {
-  overall: 0.43,
+  overall: 0.51,
   target: 1,
-  stageLabel: "Foundation slice shipped",
+  stageLabel: "Theme + inbox slice shipped",
   modules: [
     {
       label: "Control Tower UI",
-      score: 0.45,
-      detail: "The dashboard exposes real builder state, but the premium studio feel is still ahead of us.",
+      score: 0.62,
+      detail: "The shell now has real theming, a stronger dashboard, and a much more operational Studio surface.",
     },
     {
       label: "Destinations",
-      score: 0.4,
-      detail: "Pulse now knows which page/account is meant to speak, including cadence basics.",
+      score: 0.43,
+      detail: "Destinations are durable now, and the UI finally treats them like first-class brand voices.",
     },
     {
       label: "Draft Library",
-      score: 0.45,
-      detail: "Drafts now exist before queueing, with approval and queue handoff in place.",
+      score: 0.6,
+      detail: "Drafts now have review lanes beyond simple approve/queue, which makes the inbox model much more real.",
     },
     {
       label: "Scheduling Engine",
-      score: 0.5,
-      detail: "Scheduling works, but the richer window scoring and cooldown logic still needs to come next.",
+      score: 0.52,
+      detail: "Scheduling still works, but the next big step is true window scoring, cooldowns, and cadence selection.",
     },
     {
       label: "Worker Dispatch",
-      score: 0.62,
+      score: 0.63,
       detail: "Delivery remains one of the stronger modules and now feeds draft publication state.",
     },
     {
