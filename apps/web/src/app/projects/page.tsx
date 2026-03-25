@@ -1,20 +1,27 @@
 import { ProjectCard } from "@/components/ProjectCard";
+import { getProjects, type Project } from "@/lib/api";
 
-const demoProjects = [
-  { name: "TokenTap", tone: "energetic", url: "https://tokentap.ca" },
-  { name: "VPS-Sentry", tone: "practical", url: "https://vps-sentry.ca" },
-  { name: "TMail", tone: "direct", url: "https://tmail.tokentap.ca" },
-];
+export default async function ProjectsPage() {
+  let projects: Project[] = [];
 
-export default function ProjectsPage() {
+  try {
+    projects = await getProjects();
+  } catch {
+    // Keep the page renderable when the API is unavailable.
+  }
+
   return (
     <section>
       <h2>Projects</h2>
+      <p style={{ marginTop: 0, marginBottom: 16 }}>
+        These are the project identities Pulse already knows how to speak for.
+      </p>
       <div className="grid two">
-        {demoProjects.map((project) => (
-          <ProjectCard key={project.name} {...project} />
+        {projects.map((project) => (
+          <ProjectCard key={project.slug} name={project.name} tone={project.tone} url={project.website_url} active={project.active} />
         ))}
       </div>
+      {projects.length === 0 ? <small>No live projects found yet. Seed them through the API first.</small> : null}
     </section>
   );
 }

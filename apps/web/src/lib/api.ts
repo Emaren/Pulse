@@ -13,6 +13,54 @@ export type QueueItem = {
   last_error?: string | null;
 };
 
+export type Project = {
+  id: number;
+  slug: string;
+  name: string;
+  website_url: string;
+  tone: string;
+  tags: string[];
+  active: boolean;
+};
+
+export type Destination = {
+  id: number;
+  project_slug: string;
+  platform: "x" | "facebook";
+  name: string;
+  external_ref?: string | null;
+  timezone: string;
+  cadence_mode: "gentle" | "normal" | "aggressive" | "launch" | "quiet";
+  daily_post_target: number;
+  windows: string[];
+  requires_approval: boolean;
+  active: boolean;
+};
+
+export type Draft = {
+  id: number;
+  project_id: number;
+  project_slug: string;
+  destination_id?: number | null;
+  destination_name?: string | null;
+  platform?: string | null;
+  title: string;
+  body: string;
+  source_type: string;
+  kind: string;
+  status: string;
+  priority: number;
+  source_ref?: string | null;
+  notes: Record<string, unknown>;
+  approved_at?: string | null;
+  queued_at?: string | null;
+  published_at?: string | null;
+  scheduled_for?: string | null;
+  published_queue_id?: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Health = {
   status: string;
   time: string;
@@ -56,6 +104,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getHealth(): Promise<Health> {
   return request<Health>("/health");
+}
+
+export function getProjects(): Promise<Project[]> {
+  return request<Project[]>("/projects");
+}
+
+export function getDestinations(): Promise<Destination[]> {
+  return request<Destination[]>("/destinations");
+}
+
+export function getDrafts(status?: string): Promise<Draft[]> {
+  const search = status ? `?status=${encodeURIComponent(status)}` : "";
+  return request<Draft[]>(`/drafts${search}`);
 }
 
 export function getQueue(): Promise<QueueItem[]> {

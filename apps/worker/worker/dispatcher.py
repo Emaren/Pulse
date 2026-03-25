@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from .connectors.facebook import post_to_facebook
 from .connectors.x import post_to_x
-from .db import AuditEvent, PlatformAccount, PostQueue
+from .db import AuditEvent, PlatformAccount, PostDraft, PostQueue
 from .retry import retry_delay_seconds
 
 
@@ -51,6 +51,13 @@ def process_due_jobs(session: Session, batch_size: int, max_attempts: int) -> in
 
         try:
             payload = json.loads(row.payload_json or "{}")
+            draft_id = payload.get("draft_id")
+            draft = None
+            if draft_id is not None:
+                try:
+                    draft = session.get(PostDraft, int(draft_id))
+                except (TypeError, ValueError):
+                    draft = None
 
             account = session.scalar(
                 select(PlatformAccount)
@@ -70,16 +77,29 @@ def process_due_jobs(session: Session, batch_size: int, max_attempts: int) -> in
             connector = _connector_for(row.platform)
             external_post_id = connector(account.encrypted_access_token, payload)
 
+            sent_at = datetime.now(timezone.utc)
             row.status = "sent"
             row.external_post_id = external_post_id
-            row.posted_at = datetime.now(timezone.utc)
+            row.posted_at = sent_at
             row.last_error = None
             row.attempts = row.attempts + 1
+            if draft is not None:
+                draft.status = "published"
+                draft.published_at = sent_at
+                draft.published_queue_id = row.id
             _record_event(session, "sent", row.id, f"Sent {row.platform} post", {"external_post_id": external_post_id})
         except Exception as exc:  # noqa: BLE001
             next_attempt = row.attempts + 1
             row.attempts = next_attempt
             row.last_error = str(exc)
+            draft = None
+            try:
+                payload = json.loads(row.payload_json or "{}")
+                draft_id = payload.get("draft_id")
+                if draft_id is not None:
+                    draft = session.get(PostDraft, int(draft_id))
+            except Exception:  # noqa: BLE001
+                draft = None
 
             if next_attempt < max_attempts:
                 row.status = "retrying"
@@ -93,6 +113,8 @@ def process_due_jobs(session: Session, batch_size: int, max_attempts: int) -> in
                 )
             else:
                 row.status = "failed"
+                if draft is not None:
+                    draft.status = "needs_attention"
                 _record_event(
                     session,
                     "failed",

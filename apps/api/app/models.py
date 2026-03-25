@@ -22,6 +22,56 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     queue_items: Mapped[list["PostQueue"]] = relationship(back_populates="project")
+    destinations: Mapped[list["Destination"]] = relationship(back_populates="project")
+    drafts: Mapped[list["PostDraft"]] = relationship(back_populates="project")
+
+
+class Destination(Base):
+    __tablename__ = "destinations"
+    __table_args__ = (UniqueConstraint("project_id", "platform", "name", name="uq_destinations_project_platform_name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), index=True)
+    platform: Mapped[str] = mapped_column(String(32), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    external_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    timezone: Mapped[str] = mapped_column(String(64), default="America/Edmonton")
+    cadence_mode: Mapped[str] = mapped_column(String(32), default="normal")
+    daily_post_target: Mapped[int] = mapped_column(Integer, default=2)
+    windows_json: Mapped[str] = mapped_column(Text, default='["08:00","10:00","14:00","19:00","23:30"]')
+    requires_approval: Mapped[bool] = mapped_column(Boolean, default=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    project: Mapped[Project] = relationship(back_populates="destinations")
+    drafts: Mapped[list["PostDraft"]] = relationship(back_populates="destination")
+
+
+class PostDraft(Base):
+    __tablename__ = "post_drafts"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), index=True)
+    destination_id: Mapped[int | None] = mapped_column(ForeignKey("destinations.id"), nullable=True, index=True)
+    title: Mapped[str] = mapped_column(String(255))
+    body: Mapped[str] = mapped_column(Text)
+    source_type: Mapped[str] = mapped_column(String(32), default="manual")
+    kind: Mapped[str] = mapped_column(String(32), default="fresh")
+    status: Mapped[str] = mapped_column(String(32), index=True, default="draft")
+    priority: Mapped[int] = mapped_column(Integer, default=50)
+    source_ref: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    notes_json: Mapped[str] = mapped_column(Text, default="{}")
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    queued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    published_queue_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    project: Mapped[Project] = relationship(back_populates="drafts")
+    destination: Mapped[Destination | None] = relationship(back_populates="drafts")
 
 
 class PlatformAccount(Base):
