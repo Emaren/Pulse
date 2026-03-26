@@ -13,6 +13,44 @@ export type QueueItem = {
   last_error?: string | null;
 };
 
+export type CadencePreview = {
+  destination_id: number;
+  project_id: number;
+  project_slug: string;
+  project_name: string;
+  destination_name: string;
+  platform: "x" | "facebook";
+  cadence_mode: string;
+  daily_post_target: number;
+  queued_today: number;
+  cooldown_minutes: number;
+  cooldown_until?: string | null;
+  next_window_at?: string | null;
+  eligible_drafts: number;
+  recommended_draft_id?: number | null;
+  recommended_draft_title?: string | null;
+  blocked_reason?: string | null;
+};
+
+export type CadenceRunItem = {
+  destination_id: number;
+  project_slug: string;
+  destination_name: string;
+  platform: "x" | "facebook";
+  draft_id?: number | null;
+  draft_title?: string | null;
+  scheduled_at?: string | null;
+  status: "queued" | "skipped";
+  reason?: string | null;
+};
+
+export type CadenceRunResult = {
+  run_at: string;
+  queued_count: number;
+  skipped_count: number;
+  items: CadenceRunItem[];
+};
+
 export type Project = {
   id: number;
   slug: string;
@@ -112,6 +150,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getHealth(): Promise<Health> {
   return request<Health>("/health");
+}
+
+export function getCadencePreview(projectSlug?: string): Promise<CadencePreview[]> {
+  const search = projectSlug ? `?project_slug=${encodeURIComponent(projectSlug)}` : "";
+  return request<CadencePreview[]>(`/automation/cadence${search}`);
 }
 
 export function getProjects(): Promise<Project[]> {

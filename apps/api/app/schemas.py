@@ -154,6 +154,49 @@ class QueueOut(BaseModel):
     payload: dict[str, Any]
 
 
+class CadencePreviewOut(BaseModel):
+    destination_id: int
+    project_id: int
+    project_slug: str
+    project_name: str
+    destination_name: str
+    platform: str
+    cadence_mode: str
+    daily_post_target: int
+    queued_today: int
+    cooldown_minutes: int
+    cooldown_until: datetime | None
+    next_window_at: datetime | None
+    eligible_drafts: int
+    recommended_draft_id: int | None
+    recommended_draft_title: str | None
+    blocked_reason: str | None
+
+
+class CadenceRunIn(BaseModel):
+    project_slug: str | None = None
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class CadenceRunItemOut(BaseModel):
+    destination_id: int
+    project_slug: str
+    destination_name: str
+    platform: str
+    draft_id: int | None
+    draft_title: str | None
+    scheduled_at: datetime | None
+    status: Literal["queued", "skipped"]
+    reason: str | None = None
+
+
+class CadenceRunOut(BaseModel):
+    run_at: datetime
+    queued_count: int
+    skipped_count: int
+    items: list[CadenceRunItemOut]
+
+
 class AuditEventOut(BaseModel):
     id: int
     event_type: str

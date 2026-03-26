@@ -1,9 +1,10 @@
 import Link from "next/link";
 
+import { CadenceAutomationPanel } from "@/components/CadenceAutomationPanel";
 import { ContextDraftPanel } from "@/components/ContextDraftPanel";
 import { QueueTable, type QueueItem } from "@/components/QueueTable";
 import { cadencePresets } from "@/lib/cadence-presets";
-import { getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type Destination, type Draft, type Project, type Template } from "@/lib/api";
+import { getCadencePreview, getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type CadencePreview, type Destination, type Draft, type Project, type Template } from "@/lib/api";
 import { builderStatus } from "@/lib/builder-status";
 
 export default async function DashboardPage() {
@@ -13,6 +14,7 @@ export default async function DashboardPage() {
   let destinations: Destination[] = [];
   let projects: Project[] = [];
   let templates: Template[] = [];
+  let cadencePreview: CadencePreview[] = [];
   let destinationCount = 0;
   let draftCount = 0;
   let approvalCount = 0;
@@ -21,17 +23,19 @@ export default async function DashboardPage() {
   try {
     const health = await getHealth();
     status = health.status;
-    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts] = await Promise.all([
+    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts, loadedCadencePreview] = await Promise.all([
       getQueue(),
       getProjects(),
       getTemplates(),
       getDestinations(),
       getDrafts(),
+      getCadencePreview(),
     ]);
     queue = loadedQueue as QueueItem[];
     projects = loadedProjects;
     templates = loadedTemplates;
     destinations = loadedDestinations;
+    cadencePreview = loadedCadencePreview;
     destinationCount = destinations.length;
     drafts = loadedDrafts;
     draftCount = drafts.length;
@@ -219,35 +223,36 @@ export default async function DashboardPage() {
 
       <div className="grid two">
         <ContextDraftPanel projects={projects} templates={templates} destinations={destinations} />
-
-        <section className="panel">
-          <div className="section-head">
-            <div>
-              <div className="eyebrow">Recent Drafts</div>
-              <h2>Newest activity</h2>
-            </div>
-            <Link href="/studio" className="btn-link">
-              Manage Inbox
-            </Link>
-          </div>
-          {recentDrafts.length === 0 ? (
-            <small>No drafts yet. The Studio page is ready for the first destination and draft.</small>
-          ) : (
-            <div className="grid" style={{ gap: 12 }}>
-              {recentDrafts.map((draft) => (
-                <article key={draft.id} className="draft-card">
-                  <div className="tag-row">
-                    <span className="tag">{draft.project_slug}</span>
-                    <span className="tag">{draft.status}</span>
-                  </div>
-                  <strong>{draft.title}</strong>
-                  <div className="muted">{draft.body.length > 180 ? `${draft.body.slice(0, 179)}…` : draft.body}</div>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        <CadenceAutomationPanel initialPreview={cadencePreview} />
       </div>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <div className="eyebrow">Recent Drafts</div>
+            <h2>Newest activity</h2>
+          </div>
+          <Link href="/studio" className="btn-link">
+            Manage Inbox
+          </Link>
+        </div>
+        {recentDrafts.length === 0 ? (
+          <small>No drafts yet. The Studio page is ready for the first destination and draft.</small>
+        ) : (
+          <div className="grid" style={{ gap: 12 }}>
+            {recentDrafts.map((draft) => (
+              <article key={draft.id} className="draft-card">
+                <div className="tag-row">
+                  <span className="tag">{draft.project_slug}</span>
+                  <span className="tag">{draft.status}</span>
+                </div>
+                <strong>{draft.title}</strong>
+                <div className="muted">{draft.body.length > 180 ? `${draft.body.slice(0, 179)}…` : draft.body}</div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
       <section className="panel">
         <div className="section-head">

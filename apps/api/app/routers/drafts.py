@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..deps import get_db
 from ..models import AuditEvent, Destination, PostDraft, PostQueue, Project, Template
 from ..schemas import ContextDraftIn, DraftIn, DraftOut, DraftQueueIn, DraftStatusUpdateIn
+from ..services.draft_queue import queue_draft_for_destination
 from ..services.moderation import ModerationError, ensure_post_allowed
 from ..services.scheduler import compute_scheduled_at
 from ..settings import settings
@@ -345,49 +346,13 @@ def queue_draft(draft_id: int, payload: DraftQueueIn, db: Session = Depends(get_
     else:
         scheduled_at = base_time or datetime.now(timezone.utc)
 
-    queue_payload: dict[str, Any] = {
-        "platform": destination.platform,
-        "text": draft.body,
-        "project_slug": draft.project.slug,
-        "destination_id": destination.id,
-        "draft_id": draft.id,
-        "draft_title": draft.title,
-    }
-    if destination.platform == "facebook" and destination.external_ref:
-        queue_payload["page_id"] = destination.external_ref
-
-    queue_item = PostQueue(
-        project_id=draft.project_id,
-        platform=destination.platform,
-        status="queued",
-        scheduled_at=scheduled_at,
-        payload_json=json.dumps(queue_payload),
-        attempts=0,
-    )
-    db.add(queue_item)
-    db.flush()
-
-    draft.destination_id = destination.id
-    draft.status = "queued"
-    draft.queued_at = datetime.now(timezone.utc)
-    draft.scheduled_for = scheduled_at
-    draft.published_queue_id = queue_item.id
-
-    _record_event(
+    queue_draft_for_destination(
         db,
-        "draft_queued",
-        "post_draft",
-        str(draft.id),
-        "Draft queued for delivery",
-        {"queue_id": queue_item.id, "platform": destination.platform, "mode": payload.mode},
-    )
-    _record_event(
-        db,
-        "queued",
-        "post_queue",
-        str(queue_item.id),
-        f"Queued draft for {destination.platform}",
-        {"draft_id": draft.id},
+        draft,
+        destination,
+        scheduled_at,
+        mode=payload.mode,
+        source="manual",
     )
 
     db.commit()
