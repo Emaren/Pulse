@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from ..dates import ensure_utc
+from ..models import AutomationPolicy
+from ..schemas import AutomationSettingsIn, AutomationSettingsOut
 from ..deps import get_db
 from ..schemas import CadencePreviewOut, CadenceRunIn, CadenceRunItemOut, CadenceRunOut
+from ..services.automation_policy import get_or_create_policy
 from ..services.cadence import CadencePreview, build_cadence_previews
 from ..services.draft_queue import queue_draft_for_destination, record_audit_event
 
@@ -35,25 +40,77 @@ def _preview_to_out(preview: CadencePreview) -> CadencePreviewOut:
     )
 
 
+def _policy_to_out(policy: AutomationPolicy) -> AutomationSettingsOut:
+    return AutomationSettingsOut(
+        cadence_enabled=policy.cadence_enabled,
+        cadence_interval_minutes=policy.cadence_interval_minutes,
+        cadence_run_limit=policy.cadence_run_limit,
+        quiet_hours=json.loads(policy.quiet_hours_json or "[]"),
+        last_cadence_run_at=ensure_utc(policy.last_cadence_run_at),
+    )
+
+
+@router.get("/settings", response_model=AutomationSettingsOut)
+def get_automation_settings(db: Session = Depends(get_db)) -> AutomationSettingsOut:
+    policy = get_or_create_policy(db)
+    db.commit()
+    db.refresh(policy)
+    return _policy_to_out(policy)
+
+
+@router.put("/settings", response_model=AutomationSettingsOut)
+def update_automation_settings(payload: AutomationSettingsIn, db: Session = Depends(get_db)) -> AutomationSettingsOut:
+    policy = get_or_create_policy(db)
+    policy.cadence_enabled = payload.cadence_enabled
+    policy.cadence_interval_minutes = payload.cadence_interval_minutes
+    policy.cadence_run_limit = payload.cadence_run_limit
+    policy.quiet_hours_json = json.dumps(payload.quiet_hours)
+    record_audit_event(
+        db,
+        "automation_policy_updated",
+        "automation",
+        str(policy.id),
+        "Cadence automation policy updated",
+        {
+            "cadence_enabled": payload.cadence_enabled,
+            "cadence_interval_minutes": payload.cadence_interval_minutes,
+            "cadence_run_limit": payload.cadence_run_limit,
+            "quiet_hours": payload.quiet_hours,
+        },
+    )
+    db.commit()
+    db.refresh(policy)
+    return _policy_to_out(policy)
+
+
 @router.get("/cadence", response_model=list[CadencePreviewOut])
 def preview_cadence(project_slug: str | None = None, db: Session = Depends(get_db)) -> list[CadencePreviewOut]:
-    previews = build_cadence_previews(db, project_slug=project_slug)
+    policy = get_or_create_policy(db)
+    db.commit()
+    previews = build_cadence_previews(db, project_slug=project_slug, quiet_hours=json.loads(policy.quiet_hours_json or "[]"))
     return [_preview_to_out(preview) for preview in previews]
 
 
 @router.post("/cadence/run", response_model=CadenceRunOut)
 def run_cadence(payload: CadenceRunIn, db: Session = Depends(get_db)) -> CadenceRunOut:
     run_at = datetime.now(timezone.utc)
-    previews = build_cadence_previews(db, project_slug=payload.project_slug, now=run_at)
+    policy = get_or_create_policy(db)
+    previews = build_cadence_previews(
+        db,
+        project_slug=payload.project_slug,
+        now=run_at,
+        quiet_hours=json.loads(policy.quiet_hours_json or "[]"),
+    )
 
     used_draft_ids: set[int] = set()
     queued_count = 0
     items: list[CadenceRunItemOut] = []
+    limit = payload.limit or policy.cadence_run_limit
 
     for preview in previews:
         recommended = preview.eligible_drafts[0] if preview.eligible_drafts else None
 
-        if queued_count >= payload.limit:
+        if queued_count >= limit:
             items.append(
                 CadenceRunItemOut(
                     destination_id=preview.destination.id,
@@ -136,9 +193,10 @@ def run_cadence(payload: CadenceRunIn, db: Session = Depends(get_db)) -> Cadence
             "project_slug": payload.project_slug,
             "queued_count": queued_count,
             "skipped_count": len(items) - queued_count,
-            "limit": payload.limit,
+            "limit": limit,
         },
     )
+    policy.last_cadence_run_at = run_at
     db.commit()
 
     return CadenceRunOut(

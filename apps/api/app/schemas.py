@@ -1,10 +1,12 @@
 from datetime import datetime
+import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 DEFAULT_WINDOWS = ["08:00", "10:00", "14:00", "19:00", "23:30"]
+QUIET_HOURS_PATTERN = re.compile(r"^\d{2}:\d{2}-\d{2}:\d{2}$")
 
 
 class ProjectIn(BaseModel):
@@ -175,7 +177,7 @@ class CadencePreviewOut(BaseModel):
 
 class CadenceRunIn(BaseModel):
     project_slug: str | None = None
-    limit: int = Field(default=20, ge=1, le=100)
+    limit: int | None = Field(default=None, ge=1, le=100)
 
 
 class CadenceRunItemOut(BaseModel):
@@ -195,6 +197,37 @@ class CadenceRunOut(BaseModel):
     queued_count: int
     skipped_count: int
     items: list[CadenceRunItemOut]
+
+
+class AutomationSettingsIn(BaseModel):
+    cadence_enabled: bool = False
+    cadence_interval_minutes: int = Field(default=30, ge=5, le=1440)
+    cadence_run_limit: int = Field(default=6, ge=1, le=50)
+    quiet_hours: list[str] = Field(default_factory=list)
+
+    @field_validator("quiet_hours")
+    @classmethod
+    def validate_quiet_hours(cls, value: list[str]) -> list[str]:
+        cleaned: list[str] = []
+        for item in value:
+            text = item.strip()
+            if not text:
+                continue
+            if not QUIET_HOURS_PATTERN.match(text):
+                raise ValueError(f"Invalid quiet-hour window: {item}")
+
+            start_text, end_text = text.split("-", 1)
+            for part in (start_text, end_text):
+                hour, minute = [int(piece) for piece in part.split(":", 1)]
+                if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+                    raise ValueError(f"Invalid quiet-hour window: {item}")
+
+            cleaned.append(text)
+        return cleaned
+
+
+class AutomationSettingsOut(AutomationSettingsIn):
+    last_cadence_run_at: datetime | None = None
 
 
 class AuditEventOut(BaseModel):

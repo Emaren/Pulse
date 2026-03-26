@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.orm import Session
 
+from ..dates import ensure_utc
 from ..deps import get_db
 from ..models import AuditEvent, PostQueue, Project
 from ..schemas import QueueOut, QueueScheduleIn
@@ -42,22 +43,18 @@ def _to_out(item: PostQueue) -> QueueOut:
         project_id=item.project_id,
         platform=item.platform,
         status=item.status,
-        scheduled_at=item.scheduled_at,
+        scheduled_at=ensure_utc(item.scheduled_at),
         attempts=item.attempts,
         last_error=item.last_error,
         external_post_id=item.external_post_id,
-        posted_at=item.posted_at,
+        posted_at=ensure_utc(item.posted_at),
         payload=json.loads(item.payload_json or "{}"),
     )
 
 
 def _normalize_dt(dt: datetime | None) -> datetime | None:
     """Ensure scheduled_at is timezone-aware UTC (FastAPI may give naive)."""
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+    return ensure_utc(dt)
 
 
 @router.get("", response_model=list[QueueOut])

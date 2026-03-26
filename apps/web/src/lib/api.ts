@@ -51,6 +51,14 @@ export type CadenceRunResult = {
   items: CadenceRunItem[];
 };
 
+export type AutomationSettings = {
+  cadence_enabled: boolean;
+  cadence_interval_minutes: number;
+  cadence_run_limit: number;
+  quiet_hours: string[];
+  last_cadence_run_at?: string | null;
+};
+
 export type Project = {
   id: number;
   slug: string;
@@ -155,6 +163,10 @@ export function getHealth(): Promise<Health> {
 export function getCadencePreview(projectSlug?: string): Promise<CadencePreview[]> {
   const search = projectSlug ? `?project_slug=${encodeURIComponent(projectSlug)}` : "";
   return request<CadencePreview[]>(`/automation/cadence${search}`);
+}
+
+export function getAutomationSettings(): Promise<AutomationSettings> {
+  return request<AutomationSettings>("/automation/settings");
 }
 
 export function getProjects(): Promise<Project[]> {

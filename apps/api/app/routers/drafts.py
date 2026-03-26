@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..dates import ensure_utc
 from ..deps import get_db
 from ..models import AuditEvent, Destination, PostDraft, PostQueue, Project, Template
 from ..schemas import ContextDraftIn, DraftIn, DraftOut, DraftQueueIn, DraftStatusUpdateIn
@@ -39,11 +40,7 @@ def _record_event(
 
 
 def _normalize_dt(dt: datetime | None) -> datetime | None:
-    if dt is None:
-        return None
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+    return ensure_utc(dt)
 
 
 def _to_out(item: PostDraft) -> DraftOut:
@@ -62,13 +59,13 @@ def _to_out(item: PostDraft) -> DraftOut:
         priority=item.priority,
         source_ref=item.source_ref,
         notes=json.loads(item.notes_json or "{}"),
-        approved_at=item.approved_at,
-        queued_at=item.queued_at,
-        published_at=item.published_at,
-        scheduled_for=item.scheduled_for,
+        approved_at=ensure_utc(item.approved_at),
+        queued_at=ensure_utc(item.queued_at),
+        published_at=ensure_utc(item.published_at),
+        scheduled_for=ensure_utc(item.scheduled_for),
         published_queue_id=item.published_queue_id,
-        created_at=item.created_at,
-        updated_at=item.updated_at,
+        created_at=ensure_utc(item.created_at),
+        updated_at=ensure_utc(item.updated_at),
     )
 
 

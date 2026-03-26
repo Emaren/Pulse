@@ -4,20 +4,20 @@
 
 This is a relative "distance from ideal" score for tracking progress without pretending the repo is further along than it is.
 
-- Overall builder score: `0.67 / 1.00`
+- Overall builder score: `0.72 / 1.00`
 - Semantic package versions: still `0.1.0`
-- Interpretation: Pulse now has a real admin deck and a first real cadence brain, but the premium control-tower product still needs deeper policy and full cross-stack automation
+- Interpretation: Pulse now has a real admin deck, a durable cadence policy layer, and a worker-triggered autopilot path, but the premium control-tower product still needs deeper content intelligence and fuller cross-stack automation
 
 ## Module scorecard
 
 | Module | Current | Target | Plain-English read |
 | --- | --- | --- | --- |
-| Control tower UI | 0.78 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, and a cadence planner |
-| Destination/page control | 0.62 | 0.90 | Pulse has durable destination objects, cadence presets, and previewable automation readiness, though policy depth is still early |
-| Draft library + approval | 0.73 | 0.95 | The inbox now supports both manual drafting and context-generated draft creation before approval and cadence pickup |
-| Scheduling/cadence engine | 0.72 | 0.90 | Pulse can now preview and run destination-aware cadence scheduling with daily targets, cooldowns, and no-repeat guards |
-| Worker dispatch | 0.64 | 0.85 | The worker remains one of the stronger pieces and now receives better queue inputs from manual and cadence-driven routing |
-| Ops + deploy ergonomics | 0.60 | 0.85 | Deploy automation is now real and startup seeding removes empty-shell boots, but rollback confidence is still not there |
+| Control tower UI | 0.80 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, a cadence planner, and real automation policy controls |
+| Destination/page control | 0.64 | 0.90 | Pulse has durable destination objects, cadence presets, quiet-hour-aware planning, and previewable automation readiness, though policy depth is still early |
+| Draft library + approval | 0.75 | 0.95 | The inbox now supports both manual drafting and context-generated draft creation before approval and cadence/autopilot pickup |
+| Scheduling/cadence engine | 0.80 | 0.90 | Pulse can now preview and run destination-aware cadence scheduling with daily targets, cooldowns, quiet hours, and no-repeat guards |
+| Worker dispatch | 0.74 | 0.85 | The worker remains one of the stronger pieces and can now trigger cadence runs in the background when the policy is armed |
+| Ops + deploy ergonomics | 0.63 | 0.85 | Deploy automation is now real, startup seeding removes empty-shell boots, and automation policy is durable, but rollback confidence is still not there |
 | Security posture | 0.35 | 0.85 | Token handling and environment discipline still need tightening |
 
 ## What is true right now
@@ -27,7 +27,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - The operator surface is now materially stronger and much less scaffold-like.
 - The next architectural gap is deeper policy intelligence: better scoring between fresh, evergreen, and resurfaced drafts, plus safer cross-project support behavior.
 - The first cross-stack automation hook now exists: observed context can become a draft without bypassing review.
-- Cadence automation can now preview and run, but it is still operator-triggered rather than background-scheduled.
+- Cadence automation can now preview, run, and background-trigger from the worker when armed, but `full-context-all` is not yet posting into Pulse automatically.
 
 ## Upgrade path
 
@@ -57,7 +57,8 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - score fresh, evergreen, and resurfaced content
 - add no-repeat and cooldown rules
 - keep auto-run limited to content that has already been approved
-- current state: Pulse can preview and run cadence automation with daily targets, cooldowns, and no-repeat guards, but deeper content scoring is still ahead
+- add a durable autopilot policy layer with quiet hours and run limits
+- current state: Pulse can preview and run cadence automation with daily targets, cooldowns, quiet hours, no-repeat guards, and worker-triggered autopilot when armed, but deeper content scoring is still ahead
 
 ### Phase 5: cross-project support
 

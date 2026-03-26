@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
+from .automation import maybe_run_cadence_automation
 from .db import SessionLocal, init_db
 from .dispatcher import process_due_jobs
 from .settings import settings
@@ -21,6 +22,14 @@ def run() -> None:
                 session=session,
                 batch_size=settings.worker_batch_size,
                 max_attempts=settings.worker_max_attempts,
+            )
+
+        automation_result = maybe_run_cadence_automation()
+        if automation_result and automation_result.get("queued_count", 0):
+            logger.info(
+                "Cadence automation queued %s draft(s) and skipped %s",
+                automation_result.get("queued_count", 0),
+                automation_result.get("skipped_count", 0),
             )
 
         if processed:

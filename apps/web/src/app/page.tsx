@@ -4,7 +4,7 @@ import { CadenceAutomationPanel } from "@/components/CadenceAutomationPanel";
 import { ContextDraftPanel } from "@/components/ContextDraftPanel";
 import { QueueTable, type QueueItem } from "@/components/QueueTable";
 import { cadencePresets } from "@/lib/cadence-presets";
-import { getCadencePreview, getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type CadencePreview, type Destination, type Draft, type Project, type Template } from "@/lib/api";
+import { getAutomationSettings, getCadencePreview, getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type AutomationSettings, type CadencePreview, type Destination, type Draft, type Project, type Template } from "@/lib/api";
 import { builderStatus } from "@/lib/builder-status";
 
 export default async function DashboardPage() {
@@ -15,6 +15,13 @@ export default async function DashboardPage() {
   let projects: Project[] = [];
   let templates: Template[] = [];
   let cadencePreview: CadencePreview[] = [];
+  let automationSettings: AutomationSettings = {
+    cadence_enabled: false,
+    cadence_interval_minutes: 30,
+    cadence_run_limit: 6,
+    quiet_hours: [],
+    last_cadence_run_at: null,
+  };
   let destinationCount = 0;
   let draftCount = 0;
   let approvalCount = 0;
@@ -23,19 +30,21 @@ export default async function DashboardPage() {
   try {
     const health = await getHealth();
     status = health.status;
-    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts, loadedCadencePreview] = await Promise.all([
+    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts, loadedCadencePreview, loadedAutomationSettings] = await Promise.all([
       getQueue(),
       getProjects(),
       getTemplates(),
       getDestinations(),
       getDrafts(),
       getCadencePreview(),
+      getAutomationSettings(),
     ]);
     queue = loadedQueue as QueueItem[];
     projects = loadedProjects;
     templates = loadedTemplates;
     destinations = loadedDestinations;
     cadencePreview = loadedCadencePreview;
+    automationSettings = loadedAutomationSettings;
     destinationCount = destinations.length;
     drafts = loadedDrafts;
     draftCount = drafts.length;
@@ -86,7 +95,7 @@ export default async function DashboardPage() {
             <div className="eyebrow">Admin Command Deck</div>
             <h2>Pulse is acting more like the real control tower now</h2>
             <p className="muted" style={{ marginBottom: 0 }}>
-              In plain English: the system now knows your projects, keeps a reusable template library, understands cadence windows better, and can already turn observed changes into approval-ready drafts.
+              In plain English: the system now knows your projects, keeps a reusable template library, can turn observed changes into approval-ready drafts, and can now queue approved content on autopilot when you arm it.
             </p>
           </div>
           <div className="quick-links">
@@ -223,7 +232,7 @@ export default async function DashboardPage() {
 
       <div className="grid two">
         <ContextDraftPanel projects={projects} templates={templates} destinations={destinations} />
-        <CadenceAutomationPanel initialPreview={cadencePreview} />
+        <CadenceAutomationPanel initialPreview={cadencePreview} settings={automationSettings} />
       </div>
 
       <section className="panel">

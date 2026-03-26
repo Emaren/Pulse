@@ -117,6 +117,19 @@ class PostQueue(Base):
     project: Mapped[Project | None] = relationship(back_populates="queue_items")
 
 
+class AutomationPolicy(Base):
+    __tablename__ = "automation_policies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cadence_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    cadence_interval_minutes: Mapped[int] = mapped_column(Integer, default=30)
+    cadence_run_limit: Mapped[int] = mapped_column(Integer, default=6)
+    quiet_hours_json: Mapped[str] = mapped_column(Text, default="[]")
+    last_cadence_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

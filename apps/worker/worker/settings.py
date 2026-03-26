@@ -6,6 +6,8 @@ class WorkerSettings(BaseSettings):
     worker_poll_seconds: int = 30
     worker_batch_size: int = 20
     worker_max_attempts: int = 3
+    pulse_api_base_url: str = "http://127.0.0.1:3390"
+    automation_request_timeout_seconds: float = 10.0
 
     token_encryption_key: str = ""
 

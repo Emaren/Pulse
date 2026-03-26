@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { CadencePreview, CadenceRunResult } from "@/lib/api";
+import type { AutomationSettings, CadencePreview, CadenceRunResult } from "@/lib/api";
 
 type CadenceAutomationPanelProps = {
   initialPreview: CadencePreview[];
+  settings: AutomationSettings;
 };
 
 type FeedbackTone = "success" | "error";
@@ -27,8 +28,6 @@ function explainReason(reason: string | null | undefined): string {
   switch (reason) {
     case "daily_target_met":
       return "Daily target already met.";
-    case "cooldown_active":
-      return "Cooling down before the next safe post.";
     case "no_approved_drafts":
       return "No approved drafts are waiting for this destination.";
     case "run_limit_reached":
@@ -40,7 +39,7 @@ function explainReason(reason: string | null | undefined): string {
   }
 }
 
-export function CadenceAutomationPanel({ initialPreview }: CadenceAutomationPanelProps) {
+export function CadenceAutomationPanel({ initialPreview, settings }: CadenceAutomationPanelProps) {
   const router = useRouter();
   const [preview, setPreview] = useState(initialPreview);
   const [lastRun, setLastRun] = useState<CadenceRunResult | null>(null);
@@ -53,6 +52,7 @@ export function CadenceAutomationPanel({ initialPreview }: CadenceAutomationPane
 
   const readyCount = preview.filter((item) => !item.blocked_reason && item.recommended_draft_id).length;
   const blockedCount = preview.length - readyCount;
+  const lastRunAt = lastRun?.run_at ?? settings.last_cadence_run_at;
 
   async function refreshPreview() {
     const response = await fetch("/api/automation/cadence", { cache: "no-store" });
@@ -72,7 +72,7 @@ export function CadenceAutomationPanel({ initialPreview }: CadenceAutomationPane
       const response = await fetch("/api/automation/cadence/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limit: 20 }),
+        body: JSON.stringify({}),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => null);
@@ -115,7 +115,7 @@ export function CadenceAutomationPanel({ initialPreview }: CadenceAutomationPane
           <div className="eyebrow">Cadence Planner</div>
           <h2>What Pulse wants to send next</h2>
           <p className="muted" style={{ marginBottom: 0 }}>
-            This is the first real automation brain. It looks at active destinations, daily targets, cooldowns, and approved drafts, then tells you what is ready to move.
+            This is the first real automation brain. It looks at active destinations, daily targets, quiet hours, and approved drafts, then tells you what is ready to move.
           </p>
         </div>
         <div className="button-row">
@@ -144,13 +144,27 @@ export function CadenceAutomationPanel({ initialPreview }: CadenceAutomationPane
         <article className="destination-card">
           <div className="metric-label">Blocked</div>
           <div className="metric-value">{blockedCount}</div>
-          <div className="metric-detail">Usually cooldown, daily target, or no approved draft.</div>
+          <div className="metric-detail">Usually daily target pressure or no approved draft waiting.</div>
         </article>
         <article className="destination-card">
           <div className="metric-label">Earliest slot</div>
           <div className="metric-value">{preview[0]?.next_window_at ? formatWhen(preview[0].next_window_at) : "None"}</div>
           <div className="metric-detail">The next scheduled opening Pulse can see from the current plan.</div>
         </article>
+        <article className="destination-card">
+          <div className="metric-label">Autopilot</div>
+          <div className="metric-value">{settings.cadence_enabled ? "armed" : "manual"}</div>
+          <div className="metric-detail">
+            {settings.cadence_enabled
+              ? `Worker checks every ${settings.cadence_interval_minutes} minutes and can queue up to ${settings.cadence_run_limit} drafts per run.`
+              : "Manual-only mode. Use Run cadence now or arm autopilot in Settings."}
+          </div>
+        </article>
+      </div>
+
+      <div className="project-meta" style={{ marginBottom: 16 }}>
+        <span className="pill">{settings.quiet_hours.length ? settings.quiet_hours.join(" · ") : "No quiet hours"}</span>
+        <span className="pill">Last run {formatWhen(lastRunAt)}</span>
       </div>
 
       <div className="grid" style={{ gap: 12 }}>

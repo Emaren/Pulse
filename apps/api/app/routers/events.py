@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ..dates import ensure_utc
 from ..deps import get_db
 from ..models import AuditEvent
 from ..schemas import AuditEventOut
@@ -24,7 +25,7 @@ def list_events(limit: int = 200, db: Session = Depends(get_db)) -> list[AuditEv
             entity_id=row.entity_id,
             message=row.message,
             data=json.loads(row.data_json or "{}"),
-            created_at=row.created_at,
+            created_at=ensure_utc(row.created_at),
         )
         for row in rows
     ]
