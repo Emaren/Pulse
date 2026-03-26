@@ -175,8 +175,13 @@ class CadencePreviewOut(BaseModel):
     cooldown_until: datetime | None
     next_window_at: datetime | None
     eligible_drafts: int
+    eligible_kind_counts: dict[str, int]
+    recent_kind_counts: dict[str, int]
     recommended_draft_id: int | None
     recommended_draft_title: str | None
+    recommended_draft_kind: str | None
+    recommended_draft_source_type: str | None
+    recommended_reason: str | None
     blocked_reason: str | None
 
 

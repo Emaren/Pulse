@@ -27,8 +27,13 @@ export type CadencePreview = {
   cooldown_until?: string | null;
   next_window_at?: string | null;
   eligible_drafts: number;
+  eligible_kind_counts: Record<string, number>;
+  recent_kind_counts: Record<string, number>;
   recommended_draft_id?: number | null;
   recommended_draft_title?: string | null;
+  recommended_draft_kind?: string | null;
+  recommended_draft_source_type?: string | null;
+  recommended_reason?: string | null;
   blocked_reason?: string | null;
 };
 

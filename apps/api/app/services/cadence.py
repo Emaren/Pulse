@@ -22,6 +22,22 @@ COOLDOWN_BY_MODE = {
 }
 
 REPEAT_LOOKBACK_DAYS = 7
+RECENT_MIX_LIMIT = 6
+KIND_ORDER = ("fresh", "evergreen", "resurface", "support")
+MIX_TARGETS = {
+    "launch": {"fresh": 0.55, "evergreen": 0.2, "resurface": 0.2, "support": 0.05},
+    "aggressive": {"fresh": 0.45, "evergreen": 0.25, "resurface": 0.2, "support": 0.1},
+    "normal": {"fresh": 0.35, "evergreen": 0.35, "resurface": 0.2, "support": 0.1},
+    "gentle": {"fresh": 0.3, "evergreen": 0.4, "resurface": 0.2, "support": 0.1},
+    "quiet": {"fresh": 0.15, "evergreen": 0.5, "resurface": 0.3, "support": 0.05},
+}
+
+
+@dataclass
+class DraftScoreCard:
+    draft: PostDraft
+    score: int
+    reasons: list[str]
 
 
 @dataclass
@@ -33,7 +49,14 @@ class CadencePreview:
     cooldown_until: datetime | None
     next_window_at: datetime | None
     eligible_drafts: list[PostDraft]
+    eligible_kind_counts: dict[str, int]
+    recent_kind_counts: dict[str, int]
+    recommended_reason: str | None
+    recommended_draft_kind: str | None
+    recommended_draft_source_type: str | None
     blocked_reason: str | None
+
+
 def _parse_quiet_range(value: str) -> tuple[int, int] | None:
     try:
         start_text, end_text = value.split("-", 1)
@@ -85,8 +108,64 @@ def _history_for_destination(db: Session, destination: Destination, *, now: date
     return history
 
 
-def _draft_score(draft: PostDraft, destination: Destination, *, now: datetime) -> int:
+def _empty_kind_counts() -> dict[str, int]:
+    return {kind: 0 for kind in KIND_ORDER}
+
+
+def _kind_counts(drafts: list[PostDraft]) -> dict[str, int]:
+    counts = _empty_kind_counts()
+    for draft in drafts:
+        counts[draft.kind] = counts.get(draft.kind, 0) + 1
+    return counts
+
+
+def _history_drafts(db: Session, history: list[tuple[PostQueue, dict]]) -> list[PostDraft]:
+    draft_ids: list[int] = []
+    for _, payload in history:
+        draft_id = payload.get("draft_id")
+        if draft_id is None:
+            continue
+        try:
+            draft_ids.append(int(draft_id))
+        except (TypeError, ValueError):
+            continue
+
+    if not draft_ids:
+        return []
+
+    drafts = db.scalars(select(PostDraft).where(PostDraft.id.in_(draft_ids))).all()
+    drafts_by_id = {draft.id: draft for draft in drafts}
+    return [drafts_by_id[draft_id] for draft_id in draft_ids if draft_id in drafts_by_id]
+
+
+def _draft_notes(draft: PostDraft) -> dict:
+    try:
+        return json.loads(draft.notes_json or "{}")
+    except Exception:
+        return {}
+
+
+def _mix_targets_for(destination: Destination) -> dict[str, float]:
+    return MIX_TARGETS.get(destination.cadence_mode, MIX_TARGETS["normal"])
+
+
+def _summarize_reasons(reasons: list[str]) -> str | None:
+    if not reasons:
+        return None
+    sentences = [reason[:1].upper() + reason[1:] if reason else reason for reason in reasons]
+    return ". ".join(sentences) + "."
+
+
+def _draft_score_card(
+    draft: PostDraft,
+    destination: Destination,
+    *,
+    now: datetime,
+    recent_history_drafts: list[PostDraft],
+    eligible_kind_counts: dict[str, int],
+) -> DraftScoreCard:
     score = draft.priority
+    reasons: list[str] = []
 
     kind_bonus = {
         "fresh": 24,
@@ -104,30 +183,82 @@ def _draft_score(draft: PostDraft, destination: Destination, *, now: datetime) -
 
     score += kind_bonus.get(draft.kind, 0)
     score += source_bonus.get(draft.source_type, 0)
+    if draft.kind == "fresh":
+        reasons.append("fresh updates are still the best way to make a project feel alive")
+    elif draft.kind in {"evergreen", "resurface"}:
+        reasons.append("it helps keep the voice active even when nothing new has landed")
 
     approved_at = ensure_utc(draft.approved_at or draft.updated_at or now)
     waiting_hours = max(0, int((now - approved_at).total_seconds() // 3600))
     score += min(waiting_hours // 4, 12)
+    if waiting_hours >= 12:
+        reasons.append("it has been waiting long enough to deserve a turn")
 
     if destination.cadence_mode == "launch" and draft.kind == "fresh":
         score += 18
+        reasons.append("launch mode leans hard toward fresh updates")
     if destination.cadence_mode == "quiet" and draft.kind in {"evergreen", "resurface"}:
         score += 18
+        reasons.append("quiet mode favors steady evergreen or resurfaced content")
     if destination.cadence_mode == "aggressive" and draft.source_type == "repo_update":
         score += 10
+        reasons.append("aggressive mode rewards real observed changes")
 
-    try:
-        notes = json.loads(draft.notes_json or "{}")
-    except Exception:
-        notes = {}
+    notes = _draft_notes(draft)
 
     if notes.get("generator") == "context_intake":
         score += 8
+        reasons.append("it came from a trusted observed change")
 
-    return score
+    if draft.source_type == "repo_update":
+        age_hours = max(0, int((now - approved_at).total_seconds() // 3600))
+        fresh_signal_bonus = max(0, 12 - age_hours)
+        score += fresh_signal_bonus
+        if fresh_signal_bonus >= 6:
+            reasons.append("the underlying signal is still recent")
+
+    recent_kind_counts = _kind_counts(recent_history_drafts)
+    recent_total = sum(recent_kind_counts.values())
+    target_ratio = _mix_targets_for(destination).get(draft.kind, 0.0)
+    recent_ratio = (recent_kind_counts.get(draft.kind, 0) / recent_total) if recent_total else 0.0
+    mix_adjustment = int(round((target_ratio - recent_ratio) * 28))
+    score += mix_adjustment
+    if mix_adjustment >= 6:
+        reasons.append(f"recent queue history has been light on {draft.kind}")
+
+    if recent_history_drafts:
+        last_kind = recent_history_drafts[0].kind
+        if draft.kind == last_kind:
+            score -= 10
+        elif len(recent_history_drafts) >= 2 and recent_history_drafts[0].kind == recent_history_drafts[1].kind:
+            score += 8
+            reasons.append(f"the last two queued posts were {last_kind}, so this adds variety")
+
+    if notes.get("generator") == "content_bank" and eligible_kind_counts.get("fresh", 0) > 0:
+        score -= 12
+    elif notes.get("generator") == "content_bank" and eligible_kind_counts.get("fresh", 0) == 0:
+        score += 6
+        reasons.append("there is no fresh signal waiting, so the evergreen bank should carry the load")
+
+    if draft.kind == "support" and sum(eligible_kind_counts.get(kind, 0) for kind in ("fresh", "evergreen", "resurface")) > 0:
+        score -= 10
+
+    deduped_reasons: list[str] = []
+    for reason in reasons:
+        if reason not in deduped_reasons:
+            deduped_reasons.append(reason)
+
+    return DraftScoreCard(draft=draft, score=score, reasons=deduped_reasons[:3])
 
 
-def _eligible_drafts(db: Session, destination: Destination, *, recent_texts: set[str], now: datetime) -> list[PostDraft]:
+def _eligible_drafts(
+    db: Session,
+    destination: Destination,
+    *,
+    recent_texts: set[str],
+    recent_history_drafts: list[PostDraft],
+    now: datetime,
+) -> tuple[list[PostDraft], dict[str, int], DraftScoreCard | None]:
     rows = db.scalars(
         select(PostDraft)
         .where(
@@ -143,14 +274,25 @@ def _eligible_drafts(db: Session, destination: Destination, *, recent_texts: set
         if draft.body.strip() in recent_texts:
             continue
         eligible.append(draft)
-    eligible.sort(
-        key=lambda draft: (
-            -_draft_score(draft, destination, now=now),
-            draft.approved_at or draft.updated_at or now,
-            draft.id,
+    kind_counts = _kind_counts(eligible)
+    score_cards = [
+        _draft_score_card(
+            draft,
+            destination,
+            now=now,
+            recent_history_drafts=recent_history_drafts,
+            eligible_kind_counts=kind_counts,
+        )
+        for draft in eligible
+    ]
+    score_cards.sort(
+        key=lambda card: (
+            -card.score,
+            card.draft.approved_at or card.draft.updated_at or now,
+            card.draft.id,
         )
     )
-    return eligible
+    return [card.draft for card in score_cards], kind_counts, score_cards[0] if score_cards else None
 
 
 def _is_quiet_time(moment: datetime, destination: Destination, quiet_hours: list[str]) -> bool:
@@ -215,7 +357,15 @@ def preview_destination_cadence(
     current_time = now or datetime.now(timezone.utc)
     history = _history_for_destination(db, destination, now=current_time)
     recent_texts = {str(payload.get("text") or "").strip() for _, payload in history if str(payload.get("text") or "").strip()}
-    eligible_drafts = _eligible_drafts(db, destination, recent_texts=recent_texts, now=current_time)
+    history_drafts = _history_drafts(db, history)
+    recent_history_drafts = history_drafts[:RECENT_MIX_LIMIT]
+    eligible_drafts, eligible_kind_counts, recommended = _eligible_drafts(
+        db,
+        destination,
+        recent_texts=recent_texts,
+        recent_history_drafts=recent_history_drafts,
+        now=current_time,
+    )
     quiet_hours = quiet_hours or []
 
     day_start, day_end = _local_day_bounds(current_time, destination)
@@ -254,6 +404,11 @@ def preview_destination_cadence(
         cooldown_until=cooldown_until,
         next_window_at=next_window_at,
         eligible_drafts=eligible_drafts,
+        eligible_kind_counts=eligible_kind_counts,
+        recent_kind_counts=_kind_counts(recent_history_drafts),
+        recommended_reason=_summarize_reasons(recommended.reasons if recommended else []),
+        recommended_draft_kind=recommended.draft.kind if recommended else None,
+        recommended_draft_source_type=recommended.draft.source_type if recommended else None,
         blocked_reason=blocked_reason,
     )
 

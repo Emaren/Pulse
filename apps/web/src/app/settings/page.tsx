@@ -22,7 +22,7 @@ export default async function SettingsPage() {
       <section className="panel">
         <h2>Shell Settings</h2>
         <p style={{ marginBottom: 8 }}>Theme circles are live in the top navigation now: Black, Grey, White, Sepia, Walnut, Crimson, and Midnight.</p>
-        <small>This page now controls real automation policy; shell theming remains globally available from the top navigation.</small>
+        <small>This page controls automation policy, while the cadence planner now shows the new content-choice logic directly in the admin dashboard.</small>
       </section>
     </section>
   );

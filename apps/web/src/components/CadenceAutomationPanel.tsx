@@ -24,6 +24,13 @@ function formatWhen(value: string | null | undefined): string {
   }).format(date);
 }
 
+function formatMix(counts: Record<string, number>): string {
+  const pieces = Object.entries(counts)
+    .filter(([, count]) => count > 0)
+    .map(([kind, count]) => `${kind} ${count}`);
+  return pieces.length > 0 ? pieces.join(" · ") : "none yet";
+}
+
 function explainReason(reason: string | null | undefined): string {
   switch (reason) {
     case "daily_target_met":
@@ -115,7 +122,7 @@ export function CadenceAutomationPanel({ initialPreview, settings }: CadenceAuto
           <div className="eyebrow">Cadence Planner</div>
           <h2>What Pulse wants to send next</h2>
           <p className="muted" style={{ marginBottom: 0 }}>
-            This is the first real automation brain. It looks at active destinations, daily targets, quiet hours, and approved drafts, then tells you what is ready to move.
+            This is the first real automation brain. It looks at active destinations, daily targets, quiet hours, recent queue history, and the mix of fresh versus evergreen drafts before it recommends what should move next.
           </p>
         </div>
         <div className="button-row">
@@ -178,13 +185,17 @@ export function CadenceAutomationPanel({ initialPreview, settings }: CadenceAuto
                 <span className="tag">{item.platform}</span>
                 <span className="tag">{item.cadence_mode}</span>
                 <span className="tag">{item.queued_today}/{item.daily_post_target} today</span>
+                {item.recommended_draft_kind ? <span className="tag">{item.recommended_draft_kind}</span> : null}
               </div>
               <strong>{item.destination_name}</strong>
               <div className="muted">
                 {item.recommended_draft_title ? `Next draft: ${item.recommended_draft_title}` : "No draft selected yet."}
               </div>
+              {item.recommended_reason ? <small>{item.recommended_reason}</small> : null}
               <div className="project-meta">
                 <span className="pill">{item.eligible_drafts} approved drafts</span>
+                <span className="pill">Pool {formatMix(item.eligible_kind_counts)}</span>
+                <span className="pill">Recent {formatMix(item.recent_kind_counts)}</span>
                 <span className="pill">Next slot {formatWhen(item.next_window_at)}</span>
                 <span className="pill">Cooldown {item.cooldown_minutes}m</span>
               </div>

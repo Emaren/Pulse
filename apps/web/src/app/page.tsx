@@ -103,7 +103,7 @@ export default async function DashboardPage() {
             <div className="eyebrow">Admin Command Deck</div>
             <h2>Pulse is acting more like the real control tower now</h2>
             <p className="muted" style={{ marginBottom: 0 }}>
-              In plain English: the system now knows your projects, keeps a reusable template library, can accept trusted observations into a real inbox, turns them into approval-ready drafts, and can queue approved content on autopilot when you arm it.
+              In plain English: the system now knows your projects, keeps a reusable template library, can accept trusted observations into a real inbox, turns them into approval-ready drafts, and now chooses between fresh and evergreen content more deliberately when cadence runs.
             </p>
           </div>
           <div className="quick-links">

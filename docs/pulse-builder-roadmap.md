@@ -4,20 +4,20 @@
 
 This is a relative "distance from ideal" score for tracking progress without pretending the repo is further along than it is.
 
-- Overall builder score: `0.82 / 1.00`
+- Overall builder score: `0.86 / 1.00`
 - Semantic package versions: still `0.1.0`
-- Interpretation: Pulse now has a real admin deck, a durable cadence policy layer, a worker-triggered autopilot path, a real observation inbox for `full-context-all`-style signals, and an evergreen content bank so the cadence engine has fallback fuel, but the premium control-tower product still needs deeper content intelligence and fuller cross-stack wiring
+- Interpretation: Pulse now has a real admin deck, a durable cadence policy layer, a worker-triggered autopilot path, a real observation inbox for `full-context-all`-style signals, an evergreen content bank for fallback fuel, and a smarter selection layer that can choose between fresh and evergreen content more deliberately, but the premium control-tower product still needs fuller cross-stack wiring and deeper policy depth
 
 ## Module scorecard
 
 | Module | Current | Target | Plain-English read |
 | --- | --- | --- | --- |
-| Control tower UI | 0.87 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, an observation inbox, a cadence planner, automation policy controls, and visible evergreen shelf health |
-| Destination/page control | 0.68 | 0.90 | Pulse has durable destination objects, cadence presets, quiet-hour-aware planning, signal-driven draft routing, and clearer stocking behavior across multiple voice lanes |
-| Draft library + approval | 0.89 | 0.95 | The inbox now supports manual drafting, deduped context-signal ingestion, and evergreen bank seeding so approval/autopilot are not starved between fresh signals |
-| Scheduling/cadence engine | 0.84 | 0.90 | Pulse can now preview and run destination-aware cadence scheduling with daily targets, cooldowns, quiet hours, no-repeat guards, and a stocked evergreen fallback supply |
-| Worker dispatch | 0.75 | 0.85 | The worker remains one of the stronger pieces and can now trigger cadence runs in the background when the policy is armed while drawing from a healthier draft inventory |
-| Ops + deploy ergonomics | 0.67 | 0.85 | Deploy automation is now real, startup seeding removes empty-shell boots, Pulse exposes a cleaner inbound signal contract, and evergreen stocking can be triggered from the admin surface, but rollback confidence is still not there |
+| Control tower UI | 0.89 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, an observation inbox, a cadence planner, automation policy controls, visible evergreen shelf health, and recommendation reasoning in the planner |
+| Destination/page control | 0.70 | 0.90 | Pulse has durable destination objects, cadence presets, quiet-hour-aware planning, signal-driven draft routing, and mix-aware recommendation behavior across multiple voice lanes |
+| Draft library + approval | 0.91 | 0.95 | The inbox now supports manual drafting, deduped context-signal ingestion, and evergreen bank seeding so approval/autopilot are not starved between fresh signals |
+| Scheduling/cadence engine | 0.88 | 0.90 | Pulse can now preview and run destination-aware cadence scheduling with daily targets, cooldowns, quiet hours, no-repeat guards, a stocked evergreen fallback supply, and a smarter fresh-versus-evergreen chooser |
+| Worker dispatch | 0.77 | 0.85 | The worker remains one of the stronger pieces and can now trigger cadence runs in the background when the policy is armed while drawing from a healthier and smarter-ranked draft inventory |
+| Ops + deploy ergonomics | 0.68 | 0.85 | Deploy automation is now real, startup seeding removes empty-shell boots, Pulse exposes a cleaner inbound signal contract, and evergreen stocking can be triggered from the admin surface, but rollback confidence is still not there |
 | Security posture | 0.35 | 0.85 | Token handling and environment discipline still need tightening |
 
 ## What is true right now
@@ -30,6 +30,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - Pulse now has a durable observation inbox and dedupe contract for `full-context-all`-style signals.
 - Cadence automation can now preview, run, and background-trigger from the worker when armed, but the caller side that should post into Pulse still needs to be wired.
 - Pulse now has a shared evergreen content bank, so it can stock fallback drafts from reusable playbooks instead of going silent whenever fresh observations slow down.
+- Cadence preview now explains why it picked a draft, using recent queue mix and fresh-versus-evergreen pressure instead of acting like a black box.
 
 ## Upgrade path
 
@@ -60,7 +61,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - add no-repeat and cooldown rules
 - keep auto-run limited to content that has already been approved
 - add a durable autopilot policy layer with quiet hours and run limits
-- current state: Pulse can preview and run cadence automation with daily targets, cooldowns, quiet hours, no-repeat guards, worker-triggered autopilot when armed, and a stocked evergreen fallback supply, but deeper content scoring is still ahead
+- current state: Pulse can preview and run cadence automation with daily targets, cooldowns, quiet hours, no-repeat guards, worker-triggered autopilot when armed, a stocked evergreen fallback supply, and a real fresh-versus-evergreen selection layer, but cross-project support policy and deeper scoring are still ahead
 
 ### Phase 5: cross-project support
 

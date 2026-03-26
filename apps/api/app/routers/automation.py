@@ -35,8 +35,13 @@ def _preview_to_out(preview: CadencePreview) -> CadencePreviewOut:
         cooldown_until=preview.cooldown_until,
         next_window_at=preview.next_window_at,
         eligible_drafts=len(preview.eligible_drafts),
+        eligible_kind_counts=preview.eligible_kind_counts,
+        recent_kind_counts=preview.recent_kind_counts,
         recommended_draft_id=recommended.id if recommended else None,
         recommended_draft_title=recommended.title if recommended else None,
+        recommended_draft_kind=preview.recommended_draft_kind,
+        recommended_draft_source_type=preview.recommended_draft_source_type,
+        recommended_reason=preview.recommended_reason,
         blocked_reason=preview.blocked_reason,
     )
 
