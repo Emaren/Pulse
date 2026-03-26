@@ -51,6 +51,22 @@ export type CadenceRunResult = {
   items: CadenceRunItem[];
 };
 
+export type ContentBankSeedItem = {
+  draft_id: number;
+  project_slug: string;
+  platform: "x" | "facebook";
+  title: string;
+  kind: string;
+  status: string;
+  playbook_key?: string | null;
+  source_ref?: string | null;
+};
+
+export type ContentBankSeedResult = {
+  created_count: number;
+  items: ContentBankSeedItem[];
+};
+
 export type AutomationSettings = {
   cadence_enabled: boolean;
   cadence_interval_minutes: number;

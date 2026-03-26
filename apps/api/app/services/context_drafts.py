@@ -16,7 +16,7 @@ def _normalize_tag(value: str) -> str:
     return "".join(character for character in value.lower() if character.isalnum())
 
 
-def _render_context_template(template_body: str, project: Project, change_summary: str) -> str:
+def render_context_template(template_body: str, project: Project, change_summary: str) -> str:
     tags = json.loads(project.tags_json or "[]")
     tag1 = _normalize_tag(tags[0]) if len(tags) > 0 else project.slug.replace("-", "")
     tag2 = _normalize_tag(tags[1]) if len(tags) > 1 else tag1
@@ -110,7 +110,7 @@ def create_context_draft(db: Session, payload: ContextDraftIn) -> PostDraft:
         project_id=project.id,
         destination_id=destination.id if destination else None,
         title=_context_title(payload, project),
-        body=_render_context_template(template.body, project, payload.change_summary),
+        body=render_context_template(template.body, project, payload.change_summary),
         source_type="repo_update",
         kind="fresh",
         status="approved" if payload.auto_approve else "draft",

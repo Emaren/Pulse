@@ -7,12 +7,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from ..dates import ensure_utc
-from ..models import AutomationPolicy
-from ..schemas import AutomationSettingsIn, AutomationSettingsOut
+from ..models import AutomationPolicy, PostDraft
+from ..schemas import AutomationSettingsIn, AutomationSettingsOut, ContentBankSeedIn, ContentBankSeedItemOut, ContentBankSeedOut
 from ..deps import get_db
 from ..schemas import CadencePreviewOut, CadenceRunIn, CadenceRunItemOut, CadenceRunOut
 from ..services.automation_policy import get_or_create_policy
 from ..services.cadence import CadencePreview, build_cadence_previews
+from ..services.content_bank import seed_content_bank
 from ..services.draft_queue import queue_draft_for_destination, record_audit_event
 
 router = APIRouter(prefix="/automation", tags=["automation"])
@@ -47,6 +48,29 @@ def _policy_to_out(policy: AutomationPolicy) -> AutomationSettingsOut:
         cadence_run_limit=policy.cadence_run_limit,
         quiet_hours=json.loads(policy.quiet_hours_json or "[]"),
         last_cadence_run_at=ensure_utc(policy.last_cadence_run_at),
+    )
+
+
+def _draft_notes(draft_notes_json: str | None) -> dict:
+    if not draft_notes_json:
+        return {}
+    try:
+        return json.loads(draft_notes_json)
+    except Exception:
+        return {}
+
+
+def _content_bank_item_out(draft: PostDraft) -> ContentBankSeedItemOut:
+    notes = _draft_notes(draft.notes_json)
+    return ContentBankSeedItemOut(
+        draft_id=draft.id,
+        project_slug=draft.project.slug,
+        platform=notes.get("requested_platform", "facebook"),
+        title=draft.title,
+        kind=draft.kind,
+        status=draft.status,
+        playbook_key=notes.get("playbook_key"),
+        source_ref=draft.source_ref,
     )
 
 
@@ -204,4 +228,21 @@ def run_cadence(payload: CadenceRunIn, db: Session = Depends(get_db)) -> Cadence
         queued_count=queued_count,
         skipped_count=len(items) - queued_count,
         items=items,
+    )
+
+
+@router.post("/content-bank/seed", response_model=ContentBankSeedOut)
+def seed_evergreen_content_bank(payload: ContentBankSeedIn, db: Session = Depends(get_db)) -> ContentBankSeedOut:
+    drafts = seed_content_bank(
+        db,
+        project_slug=payload.project_slug,
+        platforms=list(payload.platforms),
+        auto_approve=payload.auto_approve,
+        limit_per_project=payload.limit_per_project,
+    )
+    db.commit()
+
+    return ContentBankSeedOut(
+        created_count=len(drafts),
+        items=[_content_bank_item_out(draft) for draft in drafts],
     )

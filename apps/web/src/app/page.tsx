@@ -85,10 +85,14 @@ export default async function DashboardPage() {
   const activeTemplateCount = templates.filter((template) => template.is_active).length;
   const voiceReadyProjects = projects.filter((project) => destinations.some((destination) => destination.project_slug === project.slug && destination.active)).length;
   const cadenceReadyDestinations = destinations.filter((destination) => destination.active && destination.windows.length >= 5).length;
+  const evergreenBankDrafts = drafts.filter((draft) => draft.notes?.generator === "content_bank");
+  const approvedEvergreenBankDrafts = evergreenBankDrafts.filter((draft) => draft.status === "approved");
+  const freshSignalDrafts = drafts.filter((draft) => draft.source_type === "repo_update");
   const projectSummaries = projects.map((project) => ({
     ...project,
     destinationCount: destinations.filter((destination) => destination.project_slug === project.slug).length,
     draftCount: drafts.filter((draft) => draft.project_slug === project.slug).length,
+    contentBankCount: evergreenBankDrafts.filter((draft) => draft.project_slug === project.slug).length,
   }));
 
   return (
@@ -203,6 +207,44 @@ export default async function DashboardPage() {
       <section className="panel">
         <div className="section-head">
           <div>
+            <div className="eyebrow">Always-Alive Engine</div>
+            <h2>How much evergreen fuel Pulse has on the shelf</h2>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              In plain English: this is the backup stock. When there is no fresh observation yet, Pulse can still pull from these prebuilt evergreen drafts so a project does not go quiet and look abandoned.
+            </p>
+          </div>
+          <Link href="/templates" className="btn-link">
+            Stock the library
+          </Link>
+        </div>
+
+        <div className="metric-grid">
+          <article className="destination-card">
+            <div className="metric-label">Evergreen bank drafts</div>
+            <div className="metric-value">{evergreenBankDrafts.length}</div>
+            <div className="metric-detail">Reusable drafts generated from the shared playbooks and your project metadata.</div>
+          </article>
+          <article className="destination-card">
+            <div className="metric-label">Autopilot-ready bank</div>
+            <div className="metric-value">{approvedEvergreenBankDrafts.length}</div>
+            <div className="metric-detail">Evergreen stock already approved and safe for cadence or autopilot to use.</div>
+          </article>
+          <article className="destination-card">
+            <div className="metric-label">Fresh observation drafts</div>
+            <div className="metric-value">{freshSignalDrafts.length}</div>
+            <div className="metric-detail">Repo or context-driven drafts generated from what the system noticed changing.</div>
+          </article>
+          <article className="destination-card">
+            <div className="metric-label">Projects with shelf stock</div>
+            <div className="metric-value">{projectSummaries.filter((project) => project.contentBankCount > 0).length}</div>
+            <div className="metric-detail">Projects that already have evergreen backup content in reserve.</div>
+          </article>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
             <div className="eyebrow">Project Radar</div>
             <h2>Which projects are setup and which still need voice wiring</h2>
           </div>
@@ -227,6 +269,7 @@ export default async function DashboardPage() {
                 <div className="project-meta">
                   <span className="pill">{project.destinationCount} destinations</span>
                   <span className="pill">{project.draftCount} drafts</span>
+                  <span className="pill">{project.contentBankCount} banked</span>
                 </div>
               </article>
             ))

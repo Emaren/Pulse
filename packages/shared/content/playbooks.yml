@@ -1,0 +1,26 @@
+playbooks:
+  - key: why_it_exists
+    kind: evergreen
+    source_type: evergreen
+    priority: 48
+    update_template: "{project_name} keeps pushing on {tag1} and {tag2} so the people who care about that work have something steady to return to."
+  - key: quiet_reminder
+    kind: evergreen
+    source_type: evergreen
+    priority: 44
+    update_template: "A quiet reminder that {project_name} is built around {tag1}, {tag2}, and showing up consistently instead of disappearing between bursts."
+  - key: progress_rhythm
+    kind: resurface
+    source_type: resurface
+    priority: 40
+    update_template: "{project_name} is still moving in the right direction. The work around {tag1} and {tag2} keeps getting sharper over time."
+  - key: revisit_invite
+    kind: resurface
+    source_type: resurface
+    priority: 38
+    update_template: "If you have not looked at {project_name} in a while, this is a good time to take another pass through {url} and see how the {tag1} story is evolving."
+  - key: support_signal
+    kind: support
+    source_type: support
+    priority: 36
+    update_template: "{project_name} is the kind of project we want to keep visible because {tag1} and {tag2} deserve more patient, steady attention."

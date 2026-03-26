@@ -204,6 +204,29 @@ class CadenceRunOut(BaseModel):
     items: list[CadenceRunItemOut]
 
 
+class ContentBankSeedIn(BaseModel):
+    project_slug: str | None = None
+    platforms: list[Literal["facebook", "x"]] = Field(default_factory=lambda: ["facebook", "x"])
+    auto_approve: bool = True
+    limit_per_project: int = Field(default=4, ge=1, le=12)
+
+
+class ContentBankSeedItemOut(BaseModel):
+    draft_id: int
+    project_slug: str
+    platform: Literal["facebook", "x"]
+    title: str
+    kind: str
+    status: str
+    playbook_key: str | None = None
+    source_ref: str | None
+
+
+class ContentBankSeedOut(BaseModel):
+    created_count: int
+    items: list[ContentBankSeedItemOut]
+
+
 class AutomationSettingsIn(BaseModel):
     cadence_enabled: bool = False
     cadence_interval_minutes: int = Field(default=30, ge=5, le=1440)
