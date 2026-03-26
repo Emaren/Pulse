@@ -3,8 +3,9 @@ import Link from "next/link";
 import { CadenceAutomationPanel } from "@/components/CadenceAutomationPanel";
 import { ContextDraftPanel } from "@/components/ContextDraftPanel";
 import { QueueTable, type QueueItem } from "@/components/QueueTable";
+import { SignalInboxPanel } from "@/components/SignalInboxPanel";
 import { cadencePresets } from "@/lib/cadence-presets";
-import { getAutomationSettings, getCadencePreview, getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type AutomationSettings, type CadencePreview, type Destination, type Draft, type Project, type Template } from "@/lib/api";
+import { getAutomationSettings, getCadencePreview, getDestinations, getDrafts, getHealth, getProjects, getQueue, getSignals, getTemplates, type AutomationSettings, type CadencePreview, type ContextSignal, type Destination, type Draft, type Project, type Template } from "@/lib/api";
 import { builderStatus } from "@/lib/builder-status";
 
 export default async function DashboardPage() {
@@ -15,6 +16,7 @@ export default async function DashboardPage() {
   let projects: Project[] = [];
   let templates: Template[] = [];
   let cadencePreview: CadencePreview[] = [];
+  let signals: ContextSignal[] = [];
   let automationSettings: AutomationSettings = {
     cadence_enabled: false,
     cadence_interval_minutes: 30,
@@ -30,7 +32,7 @@ export default async function DashboardPage() {
   try {
     const health = await getHealth();
     status = health.status;
-    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts, loadedCadencePreview, loadedAutomationSettings] = await Promise.all([
+    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts, loadedCadencePreview, loadedAutomationSettings, loadedSignals] = await Promise.all([
       getQueue(),
       getProjects(),
       getTemplates(),
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
       getDrafts(),
       getCadencePreview(),
       getAutomationSettings(),
+      getSignals(),
     ]);
     queue = loadedQueue as QueueItem[];
     projects = loadedProjects;
@@ -45,6 +48,7 @@ export default async function DashboardPage() {
     destinations = loadedDestinations;
     cadencePreview = loadedCadencePreview;
     automationSettings = loadedAutomationSettings;
+    signals = loadedSignals;
     destinationCount = destinations.length;
     drafts = loadedDrafts;
     draftCount = drafts.length;
@@ -95,7 +99,7 @@ export default async function DashboardPage() {
             <div className="eyebrow">Admin Command Deck</div>
             <h2>Pulse is acting more like the real control tower now</h2>
             <p className="muted" style={{ marginBottom: 0 }}>
-              In plain English: the system now knows your projects, keeps a reusable template library, can turn observed changes into approval-ready drafts, and can now queue approved content on autopilot when you arm it.
+              In plain English: the system now knows your projects, keeps a reusable template library, can accept trusted observations into a real inbox, turns them into approval-ready drafts, and can queue approved content on autopilot when you arm it.
             </p>
           </div>
           <div className="quick-links">
@@ -158,7 +162,7 @@ export default async function DashboardPage() {
             <article className="destination-card">
               <div className="metric-label">Active templates</div>
               <div className="metric-value">{activeTemplateCount}</div>
-              <div className="metric-detail">Reusable copy frames available to the context intake flow.</div>
+              <div className="metric-detail">Reusable copy frames available to the context intake and signal bridge.</div>
             </article>
             <article className="destination-card">
               <div className="metric-label">Cadence-ready destinations</div>
@@ -234,6 +238,8 @@ export default async function DashboardPage() {
         <ContextDraftPanel projects={projects} templates={templates} destinations={destinations} />
         <CadenceAutomationPanel initialPreview={cadencePreview} settings={automationSettings} />
       </div>
+
+      <SignalInboxPanel initialSignals={signals} />
 
       <section className="panel">
         <div className="section-head">

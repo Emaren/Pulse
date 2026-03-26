@@ -4,20 +4,20 @@
 
 This is a relative "distance from ideal" score for tracking progress without pretending the repo is further along than it is.
 
-- Overall builder score: `0.72 / 1.00`
+- Overall builder score: `0.77 / 1.00`
 - Semantic package versions: still `0.1.0`
-- Interpretation: Pulse now has a real admin deck, a durable cadence policy layer, and a worker-triggered autopilot path, but the premium control-tower product still needs deeper content intelligence and fuller cross-stack automation
+- Interpretation: Pulse now has a real admin deck, a durable cadence policy layer, a worker-triggered autopilot path, and a real observation inbox for `full-context-all`-style signals, but the premium control-tower product still needs deeper content intelligence and fuller cross-stack wiring
 
 ## Module scorecard
 
 | Module | Current | Target | Plain-English read |
 | --- | --- | --- | --- |
-| Control tower UI | 0.80 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, a cadence planner, and real automation policy controls |
-| Destination/page control | 0.64 | 0.90 | Pulse has durable destination objects, cadence presets, quiet-hour-aware planning, and previewable automation readiness, though policy depth is still early |
-| Draft library + approval | 0.75 | 0.95 | The inbox now supports both manual drafting and context-generated draft creation before approval and cadence/autopilot pickup |
+| Control tower UI | 0.84 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, context intake, an observation inbox, a cadence planner, and real automation policy controls |
+| Destination/page control | 0.66 | 0.90 | Pulse has durable destination objects, cadence presets, quiet-hour-aware planning, and signal-driven draft routing, though policy depth is still early |
+| Draft library + approval | 0.82 | 0.95 | The inbox now supports manual drafting plus deduped context-signal ingestion before approval and cadence/autopilot pickup |
 | Scheduling/cadence engine | 0.80 | 0.90 | Pulse can now preview and run destination-aware cadence scheduling with daily targets, cooldowns, quiet hours, and no-repeat guards |
 | Worker dispatch | 0.74 | 0.85 | The worker remains one of the stronger pieces and can now trigger cadence runs in the background when the policy is armed |
-| Ops + deploy ergonomics | 0.63 | 0.85 | Deploy automation is now real, startup seeding removes empty-shell boots, and automation policy is durable, but rollback confidence is still not there |
+| Ops + deploy ergonomics | 0.65 | 0.85 | Deploy automation is now real, startup seeding removes empty-shell boots, and Pulse now exposes a cleaner inbound signal contract, but rollback confidence is still not there |
 | Security posture | 0.35 | 0.85 | Token handling and environment discipline still need tightening |
 
 ## What is true right now
@@ -27,7 +27,8 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - The operator surface is now materially stronger and much less scaffold-like.
 - The next architectural gap is deeper policy intelligence: better scoring between fresh, evergreen, and resurfaced drafts, plus safer cross-project support behavior.
 - The first cross-stack automation hook now exists: observed context can become a draft without bypassing review.
-- Cadence automation can now preview, run, and background-trigger from the worker when armed, but `full-context-all` is not yet posting into Pulse automatically.
+- Pulse now has a durable observation inbox and dedupe contract for `full-context-all`-style signals.
+- Cadence automation can now preview, run, and background-trigger from the worker when armed, but the caller side that should post into Pulse still needs to be wired.
 
 ## Upgrade path
 
@@ -72,6 +73,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - keep Pulse as campaign intent truth
 - keep execution truth downstream
 - keep VPSSentry/full-context-all on the observation side and let Pulse own draft generation + approval
+- current state: Pulse now exposes a deduped `/signals/ingest` landing zone for trusted observation systems, but the caller still needs to post into it
 
 ## First implementation slice
 

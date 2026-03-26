@@ -130,6 +130,31 @@ class AutomationPolicy(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
+class ContextSignal(Base):
+    __tablename__ = "context_signals"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), index=True)
+    destination_id: Mapped[int | None] = mapped_column(ForeignKey("destinations.id"), nullable=True, index=True)
+    draft_id: Mapped[int | None] = mapped_column(ForeignKey("post_drafts.id"), nullable=True, index=True)
+    platform: Mapped[str] = mapped_column(String(32), index=True)
+    template_name: Mapped[str] = mapped_column(String(128))
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    change_summary: Mapped[str] = mapped_column(Text)
+    source_ref: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    fingerprint: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    status: Mapped[str] = mapped_column(String(32), index=True, default="received")
+    auto_approve: Mapped[bool] = mapped_column(Boolean, default=False)
+    notes_json: Mapped[str] = mapped_column(Text, default="{}")
+    observed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    project: Mapped[Project] = relationship()
+    destination: Mapped[Destination | None] = relationship(foreign_keys=[destination_id])
+    draft: Mapped[PostDraft | None] = relationship(foreign_keys=[draft_id])
+
+
 class AuditEvent(Base):
     __tablename__ = "audit_events"
 

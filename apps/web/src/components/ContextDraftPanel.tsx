@@ -76,7 +76,7 @@ export function ContextDraftPanel({ projects, templates, destinations }: Context
       setAutoApprove(false);
       setMessage({
         tone: "success",
-        text: "Context draft created in the inbox. This is the future full-context-all handoff path.",
+        text: "Context draft created in the inbox. The automated signal bridge now uses this same draft engine under the hood.",
       });
       router.refresh();
     } catch (error) {
@@ -93,7 +93,7 @@ export function ContextDraftPanel({ projects, templates, destinations }: Context
           <div className="eyebrow">Context Intake</div>
           <h2>Observed changes to draft-ready post</h2>
           <p className="muted" style={{ marginBottom: 0 }}>
-            This is the `full-context-all` bridge in plain English: another system notices changes, hands Pulse a short summary, and Pulse turns that into a reviewable draft instead of publishing blindly.
+            This is the operator-side version of the `full-context-all` bridge: another system can now land observations in the new inbox automatically, and this manual panel uses the same renderer when you want to handcraft the signal yourself.
           </p>
         </div>
       </div>

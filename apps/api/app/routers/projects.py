@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..deps import get_db
-from ..models import Destination, PostDraft, PostQueue, Project
+from ..models import ContextSignal, Destination, PostDraft, PostQueue, Project
 from ..schemas import ProjectIn, ProjectOut, ProjectUpdateIn
 from ..services.catalog import seed_projects
 
@@ -108,13 +108,14 @@ def delete_project(project_slug: str, db: Session = Depends(get_db)) -> Response
     destination_count = db.scalar(select(func.count()).select_from(Destination).where(Destination.project_id == project.id)) or 0
     draft_count = db.scalar(select(func.count()).select_from(PostDraft).where(PostDraft.project_id == project.id)) or 0
     queue_count = db.scalar(select(func.count()).select_from(PostQueue).where(PostQueue.project_id == project.id)) or 0
+    signal_count = db.scalar(select(func.count()).select_from(ContextSignal).where(ContextSignal.project_id == project.id)) or 0
 
-    if destination_count or draft_count or queue_count:
+    if destination_count or draft_count or queue_count or signal_count:
         raise HTTPException(
             status_code=400,
             detail=(
                 "Project still has Pulse history attached "
-                f"({destination_count} destinations, {draft_count} drafts, {queue_count} queue items). "
+                f"({destination_count} destinations, {draft_count} drafts, {queue_count} queue items, {signal_count} signals). "
                 "Deactivate it instead of deleting."
             ),
         )

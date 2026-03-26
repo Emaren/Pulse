@@ -107,6 +107,11 @@ class ContextDraftIn(BaseModel):
     source_ref: str | None = None
 
 
+class ContextSignalIn(ContextDraftIn):
+    create_draft: bool = True
+    observed_at: datetime | None = None
+
+
 class DraftOut(BaseModel):
     id: int
     project_id: int
@@ -228,6 +233,28 @@ class AutomationSettingsIn(BaseModel):
 
 class AutomationSettingsOut(AutomationSettingsIn):
     last_cadence_run_at: datetime | None = None
+
+
+class ContextSignalOut(BaseModel):
+    id: int
+    project_id: int
+    project_slug: str
+    destination_id: int | None
+    destination_name: str | None
+    platform: Literal["facebook", "x"]
+    template_name: str
+    title: str | None
+    change_summary: str
+    source_ref: str | None
+    fingerprint: str
+    status: Literal["received", "drafted"]
+    auto_approve: bool
+    draft_id: int | None
+    draft_title: str | None
+    deduplicated: bool = False
+    observed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
 
 
 class AuditEventOut(BaseModel):

@@ -59,6 +59,28 @@ export type AutomationSettings = {
   last_cadence_run_at?: string | null;
 };
 
+export type ContextSignal = {
+  id: number;
+  project_id: number;
+  project_slug: string;
+  destination_id?: number | null;
+  destination_name?: string | null;
+  platform: "x" | "facebook";
+  template_name: string;
+  title?: string | null;
+  change_summary: string;
+  source_ref?: string | null;
+  fingerprint: string;
+  status: "received" | "drafted";
+  auto_approve: boolean;
+  draft_id?: number | null;
+  draft_title?: string | null;
+  deduplicated?: boolean;
+  observed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Project = {
   id: number;
   slug: string;
@@ -167,6 +189,11 @@ export function getCadencePreview(projectSlug?: string): Promise<CadencePreview[
 
 export function getAutomationSettings(): Promise<AutomationSettings> {
   return request<AutomationSettings>("/automation/settings");
+}
+
+export function getSignals(projectSlug?: string): Promise<ContextSignal[]> {
+  const search = projectSlug ? `?project_slug=${encodeURIComponent(projectSlug)}` : "";
+  return request<ContextSignal[]>(`/signals${search}`);
 }
 
 export function getProjects(): Promise<Project[]> {

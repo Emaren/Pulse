@@ -1,22 +1,22 @@
 export const builderStatus = {
-  overall: 0.72,
+  overall: 0.77,
   target: 1,
-  stageLabel: "Autopilot policy slice shipped",
+  stageLabel: "Observation inbox slice shipped",
   modules: [
     {
       label: "Control Tower UI",
-      score: 0.8,
-      detail: "The shell now behaves like a true admin deck with project controls, context intake, a live cadence planner, and real automation settings.",
+      score: 0.84,
+      detail: "The shell now behaves like a true admin deck with project controls, context intake, a live observation inbox, a cadence planner, and real automation settings.",
     },
     {
       label: "Destinations",
-      score: 0.64,
-      detail: "Destinations now sit inside a seeded project catalog, inherit cadence presets, and participate in a real automation preview and autopilot loop.",
+      score: 0.66,
+      detail: "Destinations now sit inside a seeded project catalog, inherit cadence presets, and participate in automation preview, autopilot, and signal-driven draft creation.",
     },
     {
       label: "Draft Library",
-      score: 0.75,
-      detail: "Drafts now have manual lanes plus a real path for observed repo/context changes to turn into reviewable posts ready for automation pickup.",
+      score: 0.82,
+      detail: "Drafts now have manual lanes plus a real path for observed repo/context changes to land in a deduped inbox and become reviewable posts.",
     },
     {
       label: "Scheduling Engine",
@@ -30,8 +30,8 @@ export const builderStatus = {
     },
     {
       label: "Ops",
-      score: 0.63,
-      detail: "The deploy lane is real, the app can self-seed on boot, and automation policy is now durable, but rollback and deeper production visibility still need work.",
+      score: 0.65,
+      detail: "The deploy lane is real, the app can self-seed on boot, and Pulse now exposes a cleaner inbound signal contract, but rollback and deeper production visibility still need work.",
     },
     {
       label: "Security",
