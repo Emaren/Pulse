@@ -23,6 +23,14 @@ export type Project = {
   active: boolean;
 };
 
+export type Template = {
+  id: number;
+  platform: "x" | "facebook";
+  name: string;
+  body: string;
+  is_active: boolean;
+};
+
 export type Destination = {
   id: number;
   project_slug: string;
@@ -112,6 +120,10 @@ export function getProjects(): Promise<Project[]> {
 
 export function getDestinations(): Promise<Destination[]> {
   return request<Destination[]>("/destinations");
+}
+
+export function getTemplates(): Promise<Template[]> {
+  return request<Template[]>("/templates");
 }
 
 export function getDrafts(status?: string): Promise<Draft[]> {

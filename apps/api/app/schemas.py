@@ -8,7 +8,15 @@ DEFAULT_WINDOWS = ["08:00", "10:00", "14:00", "19:00", "23:30"]
 
 
 class ProjectIn(BaseModel):
-    slug: str
+    slug: str = Field(min_length=2, max_length=128, pattern=r"^[a-z0-9-]+$")
+    name: str
+    website_url: str
+    tone: str = "neutral"
+    tags: list[str] = Field(default_factory=list)
+    active: bool = True
+
+
+class ProjectUpdateIn(BaseModel):
     name: str
     website_url: str
     tone: str = "neutral"
@@ -83,6 +91,18 @@ class DraftQueueIn(BaseModel):
 
 class DraftStatusUpdateIn(BaseModel):
     status: Literal["draft", "needs_attention", "rejected", "archived"]
+
+
+class ContextDraftIn(BaseModel):
+    project_slug: str
+    change_summary: str = Field(min_length=1)
+    title: str | None = Field(default=None, max_length=255)
+    platform: Literal["facebook", "x"] = "facebook"
+    destination_id: int | None = None
+    template_name: str = "default"
+    auto_approve: bool = False
+    notes: dict[str, Any] = Field(default_factory=dict)
+    source_ref: str | None = None
 
 
 class DraftOut(BaseModel):

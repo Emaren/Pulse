@@ -4,28 +4,29 @@
 
 This is a relative "distance from ideal" score for tracking progress without pretending the repo is further along than it is.
 
-- Overall builder score: `0.51 / 1.00`
+- Overall builder score: `0.62 / 1.00`
 - Semantic package versions: still `0.1.0`
-- Interpretation: the skeleton is good, but the premium control-tower product is still early
+- Interpretation: Pulse is out of shell territory now, but the premium control-tower product is still in the middle innings
 
 ## Module scorecard
 
 | Module | Current | Target | Plain-English read |
 | --- | --- | --- | --- |
-| Control tower UI | 0.62 | 0.90 | The shell now has real themes, a stronger dashboard, and a much more operational Studio surface |
-| Destination/page control | 0.43 | 0.90 | Pulse has durable destination objects and a clearer voice map, but the policy model is still early |
-| Draft library + approval | 0.60 | 0.95 | The inbox now has real review lanes beyond approve/queue, which makes the draft system materially more useful |
-| Scheduling/cadence engine | 0.52 | 0.90 | Queue scheduling works, but true window scoring, cooldowns, and cadence selection are still ahead |
+| Control tower UI | 0.74 | 0.90 | The shell now acts like a real admin deck with seeded projects, a live template library, and context intake |
+| Destination/page control | 0.60 | 0.90 | Pulse has durable destination objects plus cadence presets, though policy depth is still early |
+| Draft library + approval | 0.69 | 0.95 | The inbox now supports both manual drafting and context-generated draft creation before approval |
+| Scheduling/cadence engine | 0.64 | 0.90 | Approved drafts can land in the next configured destination window, but cooldowns and scoring are still ahead |
 | Worker dispatch | 0.63 | 0.85 | The worker remains one of the stronger pieces and now reports draft publication state |
-| Ops + deploy ergonomics | 0.55 | 0.85 | Deploy automation is now real, but still needs stronger runtime checks and rollback confidence |
+| Ops + deploy ergonomics | 0.58 | 0.85 | Deploy automation is now real and startup seeding removes empty-shell boots, but rollback confidence is still not there |
 | Security posture | 0.35 | 0.85 | Token handling and environment discipline still need tightening |
 
 ## What is true right now
 
 - Pulse is still shaped like a social post queue more than a campaign brain.
 - The best existing foundation is the API/worker split and the audit-aware dispatch loop.
-- The biggest visible weakness is the operator surface.
-- The biggest architectural gap is the lack of durable destination and draft-library objects.
+- The operator surface is now materially stronger and much less scaffold-like.
+- The next architectural gap is deeper cadence intelligence: cooldowns, no-repeat rules, and policy scoring.
+- The first cross-stack automation hook now exists: observed context can become a draft without bypassing review.
 
 ## Upgrade path
 
@@ -55,6 +56,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - score fresh, evergreen, and resurfaced content
 - add no-repeat and cooldown rules
 - keep auto-run limited to content that has already been approved
+- current state: next-slot queueing now honors configured destination windows, but deeper scoring and cooldown logic are still ahead
 
 ### Phase 5: cross-project support
 
@@ -67,6 +69,7 @@ This is a relative "distance from ideal" score for tracking progress without pre
 - harden Pulse -> TMail -> Traffic metadata contracts
 - keep Pulse as campaign intent truth
 - keep execution truth downstream
+- keep VPSSentry/full-context-all on the observation side and let Pulse own draft generation + approval
 
 ## First implementation slice
 

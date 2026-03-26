@@ -1,13 +1,18 @@
 import Link from "next/link";
 
-import { getDestinations, getDrafts, getHealth, getQueue, type Draft } from "@/lib/api";
-import { builderStatus } from "@/lib/builder-status";
+import { ContextDraftPanel } from "@/components/ContextDraftPanel";
 import { QueueTable, type QueueItem } from "@/components/QueueTable";
+import { cadencePresets } from "@/lib/cadence-presets";
+import { getDestinations, getDrafts, getHealth, getProjects, getQueue, getTemplates, type Destination, type Draft, type Project, type Template } from "@/lib/api";
+import { builderStatus } from "@/lib/builder-status";
 
 export default async function DashboardPage() {
   let status = "offline";
   let queue: QueueItem[] = [];
   let drafts: Draft[] = [];
+  let destinations: Destination[] = [];
+  let projects: Project[] = [];
+  let templates: Template[] = [];
   let destinationCount = 0;
   let draftCount = 0;
   let approvalCount = 0;
@@ -16,8 +21,17 @@ export default async function DashboardPage() {
   try {
     const health = await getHealth();
     status = health.status;
-    queue = (await getQueue()) as QueueItem[];
-    const [destinations, loadedDrafts] = await Promise.all([getDestinations(), getDrafts()]);
+    const [loadedQueue, loadedProjects, loadedTemplates, loadedDestinations, loadedDrafts] = await Promise.all([
+      getQueue(),
+      getProjects(),
+      getTemplates(),
+      getDestinations(),
+      getDrafts(),
+    ]);
+    queue = loadedQueue as QueueItem[];
+    projects = loadedProjects;
+    templates = loadedTemplates;
+    destinations = loadedDestinations;
     destinationCount = destinations.length;
     drafts = loadedDrafts;
     draftCount = drafts.length;
@@ -51,27 +65,38 @@ export default async function DashboardPage() {
   ];
 
   const recentDrafts = drafts.slice(0, 4);
+  const activeTemplateCount = templates.filter((template) => template.is_active).length;
+  const voiceReadyProjects = projects.filter((project) => destinations.some((destination) => destination.project_slug === project.slug && destination.active)).length;
+  const cadenceReadyDestinations = destinations.filter((destination) => destination.active && destination.windows.length >= 5).length;
+  const projectSummaries = projects.map((project) => ({
+    ...project,
+    destinationCount: destinations.filter((destination) => destination.project_slug === project.slug).length,
+    draftCount: drafts.filter((draft) => draft.project_slug === project.slug).length,
+  }));
 
   return (
     <section className="grid" style={{ gap: 16 }}>
       <section className="panel">
         <div className="section-head">
           <div>
-            <div className="eyebrow">At a Glance</div>
-            <h2>Pulse Builder Status</h2>
+            <div className="eyebrow">Admin Command Deck</div>
+            <h2>Pulse is acting more like the real control tower now</h2>
             <p className="muted" style={{ marginBottom: 0 }}>
-              In plain English: this dashboard now tracks the control tower, not just the queue.
+              In plain English: the system now knows your projects, keeps a reusable template library, understands cadence windows better, and can already turn observed changes into approval-ready drafts.
             </p>
           </div>
           <div className="quick-links">
             <Link href="/studio" className="btn-link primary">
               Open Studio
             </Link>
+            <Link href="/projects" className="btn-link subtle">
+              Manage Projects
+            </Link>
             <Link href="/queue" className="btn-link subtle">
               Open Queue
             </Link>
-            <Link href="/projects" className="btn-link">
-              View Projects
+            <Link href="/templates" className="btn-link">
+              Open Library
             </Link>
           </div>
         </div>
@@ -106,21 +131,94 @@ export default async function DashboardPage() {
         <section className="panel">
           <div className="section-head">
             <div>
-              <div className="eyebrow">Approval Inbox</div>
-              <h2>Lane Snapshot</h2>
+              <div className="eyebrow">Coverage</div>
+              <h2>Admin readiness snapshot</h2>
             </div>
-            <span className="pill">{draftCount} drafts total</span>
+            <span className="pill">{projects.length} projects loaded</span>
           </div>
           <div className="metric-grid">
-            {draftStats.map((stat) => (
-              <article key={stat.label} className="destination-card">
-                <div className="metric-label">{stat.label}</div>
-                <div className="metric-value">{stat.value}</div>
-                <div className="metric-detail">{stat.detail}</div>
+            <article className="destination-card">
+              <div className="metric-label">Voice-ready projects</div>
+              <div className="metric-value">{voiceReadyProjects}</div>
+              <div className="metric-detail">Projects with at least one active destination already attached.</div>
+            </article>
+            <article className="destination-card">
+              <div className="metric-label">Active templates</div>
+              <div className="metric-value">{activeTemplateCount}</div>
+              <div className="metric-detail">Reusable copy frames available to the context intake flow.</div>
+            </article>
+            <article className="destination-card">
+              <div className="metric-label">Cadence-ready destinations</div>
+              <div className="metric-value">{cadenceReadyDestinations}</div>
+              <div className="metric-detail">Destinations already holding 5+ daily windows.</div>
+            </article>
+            <article className="destination-card">
+              <div className="metric-label">Approval backlog</div>
+              <div className="metric-value">{draftStats[0]?.value ?? 0}</div>
+              <div className="metric-detail">Fresh items still waiting for your blessing.</div>
+            </article>
+          </div>
+        </section>
+
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <div className="eyebrow">Cadence Engine</div>
+              <h2>Preset posting rhythms</h2>
+            </div>
+            <span className="pill">{cadencePresets.length} ready-made profiles</span>
+          </div>
+          <div className="preset-grid">
+            {cadencePresets.map((preset) => (
+              <article key={preset.key} className="preset-card">
+                <div className="tag-row" style={{ marginBottom: 8 }}>
+                  <span className="tag">{preset.label}</span>
+                  <span className="tag">{preset.dailyTarget}/day</span>
+                </div>
+                <strong>{preset.windows.join(" · ")}</strong>
+                <div className="muted" style={{ marginTop: 8 }}>{preset.detail}</div>
               </article>
             ))}
           </div>
         </section>
+      </div>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <div className="eyebrow">Project Radar</div>
+            <h2>Which projects are setup and which still need voice wiring</h2>
+          </div>
+          <Link href="/projects" className="btn-link">
+            Open Projects
+          </Link>
+        </div>
+
+        <div className="project-grid">
+          {projectSummaries.length === 0 ? (
+            <small>No projects loaded yet. The startup seed should fill this on the next healthy API boot.</small>
+          ) : (
+            projectSummaries.map((project) => (
+              <article key={project.slug} className="panel project-admin-card">
+                <div className="tag-row" style={{ marginBottom: 10 }}>
+                  <span className="tag">{project.slug}</span>
+                  <span className="tag">{project.active ? "active" : "paused"}</span>
+                  <span className="tag">{project.tone}</span>
+                </div>
+                <h3 style={{ marginTop: 0 }}>{project.name}</h3>
+                <div className="muted" style={{ marginBottom: 12 }}>{project.website_url}</div>
+                <div className="project-meta">
+                  <span className="pill">{project.destinationCount} destinations</span>
+                  <span className="pill">{project.draftCount} drafts</span>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <div className="grid two">
+        <ContextDraftPanel projects={projects} templates={templates} destinations={destinations} />
 
         <section className="panel">
           <div className="section-head">

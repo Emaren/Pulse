@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { Destination, Draft, Project } from "@/lib/api";
+import { cadencePresets } from "@/lib/cadence-presets";
 
 type PostStudioProps = {
   projects: Project[];
@@ -26,7 +27,7 @@ type DraftLane = {
   statuses: string[];
 };
 
-const defaultWindows = "08:00, 10:00, 14:00, 19:00, 23:30";
+const defaultWindows = cadencePresets[0]?.windows.join(", ") ?? "08:00, 10:00, 14:00, 19:00, 23:30";
 
 const draftLanes: DraftLane[] = [
   {
@@ -118,6 +119,15 @@ export function PostStudio({ projects, destinations, drafts }: PostStudioProps) 
 
   function setFeedback(tone: MessageTone, text: string) {
     setMessage({ tone, text });
+  }
+
+  function applyCadencePreset(presetKey: string) {
+    const preset = cadencePresets.find((item) => item.key === presetKey);
+    if (!preset) return;
+
+    setCadenceMode(preset.mode);
+    setDailyPostTarget(String(preset.dailyTarget));
+    setWindowsText(preset.windows.join(", "));
   }
 
   function firstDestinationIdForProject(targetProjectSlug: string): number | null {
@@ -268,7 +278,7 @@ export function PostStudio({ projects, destinations, drafts }: PostStudioProps) 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           destination_id: destinationId,
-          mode: "exact",
+          mode: "next_slot",
         }),
       });
 
@@ -277,7 +287,7 @@ export function PostStudio({ projects, destinations, drafts }: PostStudioProps) 
         throw new Error(data?.detail ?? `Request failed (${res.status})`);
       }
 
-      setFeedback("success", "Draft queued.");
+      setFeedback("success", "Draft queued into the next cadence slot.");
       router.refresh();
     } catch (error) {
       setFeedback("error", error instanceof Error ? error.message : "Could not queue draft");
@@ -506,6 +516,18 @@ export function PostStudio({ projects, destinations, drafts }: PostStudioProps) 
               />
             </label>
 
+            <div className="grid" style={{ gap: 8 }}>
+              <small>Cadence presets</small>
+              <div className="tag-row">
+                {cadencePresets.map((preset) => (
+                  <button key={preset.key} type="button" className="btn subtle" disabled={busy} onClick={() => applyCadencePreset(preset.key)}>
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <small>These load 5-6 daily windows fast so a project can feel active without hand-entering every slot.</small>
+            </div>
+
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <label className="grid" style={{ gap: 6, flex: 1, minWidth: 160 }}>
                 <small>Cadence mode</small>
@@ -619,7 +641,7 @@ export function PostStudio({ projects, destinations, drafts }: PostStudioProps) 
                           ) : null}
                           {canQueue ? (
                             <button type="button" className="btn primary" disabled={busy} onClick={() => queueDraft(draft)}>
-                              Queue
+                              Queue next slot
                             </button>
                           ) : null}
                           {canEscalate ? (

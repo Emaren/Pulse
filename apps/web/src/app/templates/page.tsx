@@ -1,19 +1,17 @@
-import { PostPreview } from "@/components/PostPreview";
+import { TemplateLibrary } from "@/components/TemplateLibrary";
+import { getDestinations, getTemplates, type Destination, type Template } from "@/lib/api";
 
-export default function TemplatesPage() {
+export default async function TemplatesPage() {
+  let templates: Template[] = [];
+  let destinations: Destination[] = [];
+
+  try {
+    [templates, destinations] = await Promise.all([getTemplates(), getDestinations()]);
+  } catch {
+    // Keep the page renderable when the API is unavailable.
+  }
+
   return (
-    <section>
-      <h2>Templates</h2>
-      <div className="grid two">
-        <PostPreview
-          platform="x"
-          text="Working on TokenTap: added smarter queue retries.\n\nhttps://tokentap.ca #retention #localbusiness"
-        />
-        <PostPreview
-          platform="facebook"
-          text="Update from VPS-Sentry:\nWe shipped a faster health-check loop and cleaner alerts.\n\nhttps://vps-sentry.ca"
-        />
-      </div>
-    </section>
+    <TemplateLibrary initialTemplates={templates} destinations={destinations} />
   );
 }

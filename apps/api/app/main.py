@@ -1,15 +1,28 @@
+import logging
+
 from fastapi import FastAPI
 
-from .db import init_db
+from .db import SessionLocal, init_db
 from .routers import accounts, drafts, destinations, events, health, projects, queue, templates
+from .services.catalog import seed_catalog
 from .settings import settings
 
 app = FastAPI(title=settings.app_name)
+logger = logging.getLogger("pulse-api")
 
 
 @app.on_event("startup")
 def on_startup() -> None:
     init_db()
+    with SessionLocal() as db:
+        try:
+            seeded = seed_catalog(db)
+            db.commit()
+            if any(seeded.values()):
+                logger.info("Seeded Pulse catalog: %s", seeded)
+        except Exception:
+            db.rollback()
+            logger.exception("Pulse catalog bootstrap failed")
 
 
 app.include_router(health.router)

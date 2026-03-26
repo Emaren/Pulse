@@ -392,6 +392,12 @@ small,
   background: var(--accent-soft);
 }
 
+.btn.danger {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--line-strong);
+}
+
 .btn[disabled],
 .btn-inline[disabled] {
   opacity: 0.56;
@@ -501,6 +507,13 @@ small,
   gap: 8px;
 }
 
+.checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+}
+
 .status-note {
   display: flex;
   justify-content: space-between;
@@ -530,6 +543,45 @@ small,
   padding: 10px 6px;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+}
+
+.project-grid,
+.template-grid,
+.preset-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.project-grid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.template-grid {
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+}
+
+.preset-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.project-admin-card,
+.library-card,
+.preset-card {
+  display: grid;
+  gap: 14px;
+}
+
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
 }
 
 h1,

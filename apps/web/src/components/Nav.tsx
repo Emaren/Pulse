@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const links = [
-  ["Dashboard", "/"],
+  ["Admin", "/"],
   ["Studio", "/studio"],
   ["Projects", "/projects"],
   ["Templates", "/templates"],

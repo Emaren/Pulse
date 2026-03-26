@@ -1,27 +1,27 @@
 export const builderStatus = {
-  overall: 0.51,
+  overall: 0.62,
   target: 1,
-  stageLabel: "Theme + inbox slice shipped",
+  stageLabel: "Project catalog + cadence + context intake slice shipped",
   modules: [
     {
       label: "Control Tower UI",
-      score: 0.62,
-      detail: "The shell now has real theming, a stronger dashboard, and a much more operational Studio surface.",
+      score: 0.74,
+      detail: "The shell now behaves like a real admin deck with project management, a live library, and a working context-intake lane.",
     },
     {
       label: "Destinations",
-      score: 0.43,
-      detail: "Destinations are durable now, and the UI finally treats them like first-class brand voices.",
+      score: 0.6,
+      detail: "Destinations now sit inside a seeded project catalog and can inherit named cadence presets instead of hand-entered windows every time.",
     },
     {
       label: "Draft Library",
-      score: 0.6,
-      detail: "Drafts now have review lanes beyond simple approve/queue, which makes the inbox model much more real.",
+      score: 0.69,
+      detail: "Drafts now have manual lanes plus a real path for observed repo/context changes to turn into reviewable posts.",
     },
     {
       label: "Scheduling Engine",
-      score: 0.52,
-      detail: "Scheduling still works, but the next big step is true window scoring, cooldowns, and cadence selection.",
+      score: 0.64,
+      detail: "Queueing can now honor destination windows for the next cadence slot, though cooldowns and scoring still need a deeper pass.",
     },
     {
       label: "Worker Dispatch",
@@ -30,8 +30,8 @@ export const builderStatus = {
     },
     {
       label: "Ops",
-      score: 0.55,
-      detail: "Deploy automation is now real, but rollback and deeper production visibility still need work.",
+      score: 0.58,
+      detail: "The deploy lane is real and the app can self-seed on boot, but rollback and deeper production visibility still need work.",
     },
     {
       label: "Security",
